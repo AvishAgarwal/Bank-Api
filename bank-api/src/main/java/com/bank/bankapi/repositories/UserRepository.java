@@ -9,4 +9,6 @@ public interface UserRepository {
     Integer checkUserPhone(String phone);
 
     User findUserById(int user_id);
+
+    boolean updateKyc(String phone, String adhaar, User.Status status) throws BAuthException;
 }

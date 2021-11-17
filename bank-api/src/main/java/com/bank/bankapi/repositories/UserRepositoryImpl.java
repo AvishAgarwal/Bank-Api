@@ -21,6 +21,7 @@ public class UserRepositoryImpl implements UserRepository{
             "values(NEXTVAL('bt_users_seq'), ?, ?, ?, ?,?,?,?,?,?,?,?,false,now(),now())";
     private static final String CHECKUSERBYPHONE="select count(*) from bt_users where phone= ? and is_deleted=false";
     private static final String GETUSERBYID="select * from bt_users where user_id= ? and is_deleted=false";
+    private static final String UPDATEKYC="update bt_users set kyc_status= ? ,adhaar_number=?  ,last_updated_at=now() where phone = ?";
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Override
@@ -59,6 +60,26 @@ public class UserRepositoryImpl implements UserRepository{
     @Override
     public User findUserById(int user_id) {
         return jdbcTemplate.queryForObject(GETUSERBYID,userRowMapper,new Object[]{user_id});
+    }
+
+    @Override
+    public boolean updateKyc(String phone, String adhaar, User.Status status) throws BAuthException {
+        try{
+            KeyHolder keyHolder= new GeneratedKeyHolder();
+            jdbcTemplate.update(connections->{
+                PreparedStatement preparedStatement= connections.prepareStatement(UPDATEKYC, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setString(1,String.valueOf(status));
+                preparedStatement.setString(2,adhaar);
+                preparedStatement.setString(3,phone);
+
+                return preparedStatement;
+            },keyHolder);
+            return  (keyHolder.getKeys().get("kyc_status")).equals(String.valueOf(status));
+        }
+        catch (Exception e)
+        {
+            throw new BAuthException("Unable to create Employee, invalid data");
+        }
     }
 
     private RowMapper<User> userRowMapper = ((rs, rowNum) -> {

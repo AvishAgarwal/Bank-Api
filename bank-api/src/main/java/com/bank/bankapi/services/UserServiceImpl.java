@@ -30,4 +30,12 @@ public class UserServiceImpl implements UserServices{
         User user2= userRepository.findUserById(id);
         return user2;
     }
+
+    @Override
+    public boolean updateKyc(String phone, String adhaar, User.Status status) throws BAuthException {
+        if(phone.length()!=10)
+            throw new BAuthException("Invalid Phone Number");
+
+            return userRepository.updateKyc(phone,adhaar,status);
+    }
 }

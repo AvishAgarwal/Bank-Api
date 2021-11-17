@@ -95,7 +95,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
         }
         catch (Exception e)
         {
-            throw new BAuthException("Unable to create Employee, invalid data");
+            throw new BAuthException("Unable to delete Employee, invalid data");
         }
     }
 

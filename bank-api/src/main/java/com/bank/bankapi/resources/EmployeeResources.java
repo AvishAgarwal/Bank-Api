@@ -28,7 +28,19 @@ public class EmployeeResources {
         String password=(String)data.get("password");
         Employee employee= employeeService.registerEmployee(firstName,lastName,password, Employee.Role.EMPLOYEE,phone);
         Map<String, String> map= new HashMap<>();
-        map.put("message","Registered Successfull");
+        map.put("message","Registered Successfully");
+        return new ResponseEntity<>(map, HttpStatus.OK);
+
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String,String>> loginEmployee(@RequestBody Map<String,Object> data){
+
+        String phone= (String)data.get("phone");
+        String password=(String)data.get("password");
+        Employee employee= employeeService.validateEmployee(phone,password);
+        Map<String, String> map= new HashMap<>();
+        map.put("message","Login Successful");
         return new ResponseEntity<>(map, HttpStatus.OK);
 
     }

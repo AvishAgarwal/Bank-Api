@@ -2,7 +2,9 @@ package com.bank.bankapi.repositories;
 
 import com.bank.bankapi.domain.Employee;
 import com.bank.bankapi.exceptions.BAuthException;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -17,9 +19,10 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
 
     private static final String createSql="insert into bt_employees(user_id,first_name,last_name,phone,password,role,is_deleted,created_at,last_updated_at)" +
             " values(NEXTVAL('bt_employees_seq'), ?, ?, ?, ?,?,false,now(),now())";
-    private static final String countEmployeeSql = "select count(*) from bt_employees where phone= ?";
+    private static final String countEmployeeSql = "select count(*) from bt_employees where phone= ? and is_deleted=false";
 
-    private static final String getEmployeeByIdSql ="select * from bt_employees where user_id= ?";
+    private static final String getEmployeeByIdSql ="select * from bt_employees where user_id= ? and is_deleted=false";
+    private static final String getEmployeeByPhone="select * from bt_employees where phone=? and is_deleted=false";
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -28,13 +31,14 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     public Integer createEmployee(String firstName, String lastName, String password, Employee.Role role, String phone) throws BAuthException {
 
         try{
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(10));
             KeyHolder keyHolder= new GeneratedKeyHolder();
             jdbcTemplate.update(connections->{
                 PreparedStatement preparedStatement= connections.prepareStatement(createSql, Statement.RETURN_GENERATED_KEYS);
                 preparedStatement.setString(1,firstName);
                 preparedStatement.setString(2,lastName);
                 preparedStatement.setString(3,phone);
-                preparedStatement.setString(4,password);
+                preparedStatement.setString(4,hashedPassword);
                 preparedStatement.setString(5,String.valueOf(role));
                 return preparedStatement;
             },keyHolder);
@@ -47,8 +51,17 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     }
 
     @Override
-    public Employee findEmployeeByIdandPassword(int user_id, String password) throws BAuthException {
-        return null;
+    public Employee findEmployeeByIdandPassword(String phone, String password) throws BAuthException {
+        try{
+            Employee employee= jdbcTemplate.queryForObject(getEmployeeByPhone,userRowMapper,new Object[]{phone});
+            if(!BCrypt.checkpw(password,employee.getPassword()))
+                throw new BAuthException("Incorrect phone/password");
+            return employee;
+        }
+        catch (EmptyResultDataAccessException e)
+        {
+            throw new BAuthException("Incorrect phone/password");
+        }
     }
 
     @Override

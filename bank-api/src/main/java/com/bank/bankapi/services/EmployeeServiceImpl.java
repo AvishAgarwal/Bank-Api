@@ -14,8 +14,10 @@ public class EmployeeServiceImpl implements EmployeeService{
     @Autowired
     EmployeeRepository employeeRepository;
     @Override
-    public Employee validateEmployee(String user_id, String password) throws BAuthException {
-        return null;
+    public Employee validateEmployee(String phone, String password) throws BAuthException {
+        if(phone.length()!=10)
+            throw new BAuthException("Invalid Phone Number");
+        return employeeRepository.findEmployeeByIdandPassword(phone,password);
     }
 
     @Override

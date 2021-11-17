@@ -1,0 +1,23 @@
+package com.bank.bankapi.services;
+
+import com.bank.bankapi.domain.Account;
+import com.bank.bankapi.exceptions.BAuthException;
+import com.bank.bankapi.repositories.AccountRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+public class AccountServiceImpl implements AccountService{
+
+    @Autowired
+    AccountRepository accountRepository;
+    @Override
+    public Account createAccount(Account account) throws BAuthException {
+        Account account1= accountRepository.createAccount(account);
+        if(account==null)
+            throw new BAuthException("Unable to create account");
+        return account1;
+    }
+}

@@ -1,4 +1,3 @@
-
 drop database banktrackerdb;
 drop user banktracker;
 create user banktracker with password 'password';
@@ -12,6 +11,7 @@ create table bt_employees(
 user_id integer primary key not null,
 first_name varchar(20) not null,
 last_name varchar(20) not null,
+phone text not null,
 password text not null,
 role text,
 is_deleted boolean default false,
@@ -23,6 +23,7 @@ create table bt_users(
 user_id integer primary key not null,
 first_name varchar(20) not null,
 last_name varchar(20) not null,
+phone text not null,
 created_by integer not null,
 password text not null,
 current_amount numeric(11,3) not null,

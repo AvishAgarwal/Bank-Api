@@ -55,8 +55,14 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     public Employee findEmployeeByIdandPassword(String phone, String password) throws BAuthException {
         try{
             Employee employee= jdbcTemplate.queryForObject(GET_EMPLOYEE_BY_PHONE,userRowMapper,new Object[]{phone});
-            if(!BCrypt.checkpw(password,employee.getPassword()))
-                throw new BAuthException("Incorrect phone/password");
+            if(employee.getRole()== Employee.Role.ADMIN){
+                if(!password.equals(employee.getPassword()))
+                    throw new BAuthException("Incorrect phone/password");
+            }
+            else{
+                if (!BCrypt.checkpw(password, employee.getPassword()))
+                    throw new BAuthException("Incorrect phone/password");
+            }
             return employee;
         }
         catch (EmptyResultDataAccessException e)

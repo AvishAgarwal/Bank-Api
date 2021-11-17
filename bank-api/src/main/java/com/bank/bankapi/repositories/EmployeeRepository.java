@@ -11,4 +11,6 @@ public interface EmployeeRepository {
     Integer checkEmployeePhone(String phone);
 
     Employee findEmployeeById(int user_id);
+
+    boolean deleteEmployeeByPhone(String phone) throws BAuthException;
 }

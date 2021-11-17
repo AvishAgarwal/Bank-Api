@@ -35,4 +35,12 @@ public class EmployeeServiceImpl implements EmployeeService{
         return employee;
     }
 
+    @Override
+    public boolean deleteEmployee(String phone) throws BAuthException {
+        if(phone.length()!=10)
+            throw new BAuthException("Invalid Phone Number");
+       return employeeRepository.deleteEmployeeByPhone(phone);
+
+    }
+
 }

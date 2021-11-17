@@ -99,9 +99,9 @@ public class UserResources {
         account.setUser_id(Integer.valueOf(id));
         account.setCurrent_balance(Double.valueOf(balance));
         account.setType(Account.Type.valueOf(type));
-        Account account1= accountService.createAccount(account);
+        int accountNumber= accountService.createAccount(account);
         Map<String,String> map= new HashMap<>();
-        map.put("message","User has been registered");
+        map.put("message","Account Created");
         return new ResponseEntity<>(map,HttpStatus.OK);
 
     }

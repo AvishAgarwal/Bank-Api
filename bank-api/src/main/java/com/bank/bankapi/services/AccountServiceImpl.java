@@ -14,10 +14,10 @@ public class AccountServiceImpl implements AccountService{
     @Autowired
     AccountRepository accountRepository;
     @Override
-    public Account createAccount(Account account) throws BAuthException {
-        Account account1= accountRepository.createAccount(account);
+    public Integer createAccount(Account account) throws BAuthException {
+        int accountNumber= accountRepository.createAccount(account);
         if(account==null)
             throw new BAuthException("Unable to create account");
-        return account1;
+        return accountNumber;
     }
 }

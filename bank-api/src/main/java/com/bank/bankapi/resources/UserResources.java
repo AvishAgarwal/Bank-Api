@@ -82,30 +82,86 @@ public class UserResources {
     public ResponseEntity<Map<String,String>> createAccount(@RequestBody Map<String,Object> data, HttpServletRequest request){
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
+        Map<String, String> map= new HashMap<>();
         if(employeeAuth==null )
         {
-            Map<String, String> map= new HashMap<>();
+
             map.put("message","You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.OK);
         }
-
+        Account.Type type;
         String id= (String)data.get("id");
-        String type=(String)data.get("type");
+        try
+        {
+            type = Account.Type.valueOf((String) data.get("type"));
+        }
+        catch (Exception e)
+        {
+            map.put("message","Incorrect Type");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
         String balance= (String)data.get("balance");
 
         User user= userRepository.findUserById(Integer.valueOf(id));
+        if(user==null)
+        {
+            map.put("message","No such id exists");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
+
+        if(user.getKyc_status()== User.Status.REJECTED || user.getKyc_status() == User.Status.UNVERIFIED)
+        {
+            map.put("message","Please get the kyc verified");
+            return new ResponseEntity<>(map,HttpStatus.OK);
+        }
 
         Account account = new Account();
         account.setUser_id(Integer.valueOf(id));
         account.setCurrent_balance(Double.valueOf(balance));
-        account.setType(Account.Type.valueOf(type));
+        account.setType(type);
+        boolean hasAccount=false;
+        switch (account.getType()){
+            case LOAN: if(user.getLoan_account_number()!=0)
+                hasAccount=true;
+                break;
+            case SALARY:if(user.getSalary_account_number()!=0)
+                hasAccount=true;
+                break;
+            case SAVING:if(user.getSaving_account_number()!=0)
+                hasAccount=true;
+                break;
+            case CURRENT:if(user.getCurrent_account_number()!=0)
+                hasAccount=true;
+                break;
+        }
+        if(hasAccount)
+        {
+            map.put("message","Account Already Exists");
+            return new ResponseEntity<>(map,HttpStatus.OK);
+
+        }
+
         int accountNumber= accountService.createAccount(account);
-        Map<String,String> map= new HashMap<>();
+
+        switch (account.getType()){
+            case LOAN: user.setLoan_account_number(accountNumber);
+                        break;
+            case SALARY:user.setSalary_account_number(accountNumber);
+            break;
+            case SAVING:user.setSaving_account_number(accountNumber);
+            break;
+            case CURRENT:user.setCurrent_account_number(accountNumber);
+            break;
+            default: map.put("message","Invalid Account type");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
+
+        boolean flag= userRepository.updateAccounts(user);
+        if(flag)
         map.put("message","Account Created");
+        else
+            map.put("message","Unable to create Account");
         return new ResponseEntity<>(map,HttpStatus.OK);
-//
-        //
-        //
-        //connect account to user
+
     }
 }

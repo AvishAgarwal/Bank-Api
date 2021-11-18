@@ -37,4 +37,9 @@ public class AccountRepositoryImpl implements AccountRepository{
             throw new BAuthException("Unable to create Employee, invalid data");
         }
     }
+
+    @Override
+    public Account getAccountByAccNo(Account account) {
+        return null;
+    }
 }

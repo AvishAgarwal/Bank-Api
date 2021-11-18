@@ -21,7 +21,8 @@ public class UserRepositoryImpl implements UserRepository{
             "values(NEXTVAL('bt_users_seq'), ?, ?, ?, ?,?,?,?,?,?,?,?,false,now(),now())";
     private static final String CHECKUSERBYPHONE="select count(*) from bt_users where phone= ? and is_deleted=false";
     private static final String GETUSERBYID="select * from bt_users where user_id= ? and is_deleted=false";
-    private static final String UPDATEKYC="update bt_users set kyc_status= ? ,adhaar_number=?  ,last_updated_at=now() where phone = ?";
+    private static final String UPDATEKYC="update bt_users set kyc_status= ? ,adhaar_number=?  ,last_updated_at=now() where phone = ? and is_deleted=false";
+    private static final String UPDATEACCOUNTS="update bt_users set current_account_number = ?, saving_account_number= ?,loan_account_number =?, salary_account_number=?,last_updated_at=now() where user_id=? and is_deleted=false";
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Override
@@ -78,7 +79,30 @@ public class UserRepositoryImpl implements UserRepository{
         }
         catch (Exception e)
         {
-            throw new BAuthException("Unable to create Employee, invalid data");
+            throw new BAuthException("Unable to Update User, invalid data");
+        }
+    }
+
+    @Override
+    public boolean updateAccounts(User user) {
+        try{
+            KeyHolder keyHolder= new GeneratedKeyHolder();
+            jdbcTemplate.update(connections->{
+                PreparedStatement preparedStatement= connections.prepareStatement(UPDATEACCOUNTS, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setInt(1,user.getCurrent_account_number());
+                preparedStatement.setInt(2,user.getSaving_account_number());
+                preparedStatement.setInt(3,user.getLoan_account_number());
+                preparedStatement.setInt(4,user.getSalary_account_number());
+                preparedStatement.setInt(5,user.getUser_id());
+
+                return preparedStatement;
+            },keyHolder);
+
+            return  keyHolder.getKeys().size()!= 0;
+        }
+        catch (Exception e)
+        {
+            throw new BAuthException("Unable to update account, invalid data");
         }
     }
 

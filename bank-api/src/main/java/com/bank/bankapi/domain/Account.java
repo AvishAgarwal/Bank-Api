@@ -24,4 +24,5 @@ public class Account {
         LOAN,
         SALARY
     }
+
 }

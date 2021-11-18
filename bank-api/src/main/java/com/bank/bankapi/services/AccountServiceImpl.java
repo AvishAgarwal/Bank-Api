@@ -20,4 +20,9 @@ public class AccountServiceImpl implements AccountService{
             throw new BAuthException("Unable to create account");
         return accountNumber;
     }
+
+    @Override
+    public Account getAccountByAccNo(Account account) {
+        return accountRepository.getAccountByAccNo(account);
+    }
 }

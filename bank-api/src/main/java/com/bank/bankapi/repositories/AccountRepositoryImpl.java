@@ -19,6 +19,7 @@ public class AccountRepositoryImpl implements AccountRepository{
             "values(NEXTVAL('bt_accounts_seq'),?,?,?,false,now(),now());";
     private static final String GETACCOUNTBYNUMBER="Select * from bt_accounts where account_number=? and is_deleted=false";
     private static final String DELETEACCOUNT="update bt_accounts set is_deleted= true ,  last_updated_at=now() where account_number=?";
+    private static final String UPDATEBALANCE="update bt_accounts set current_balance=? ,  last_updated_at=now() where account_number=?";
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Override
@@ -57,6 +58,24 @@ public class AccountRepositoryImpl implements AccountRepository{
                 return preparedStatement;
             },keyHolder);
             return (boolean) keyHolder.getKeys().get("is_deleted");
+        }
+        catch (Exception e)
+        {
+            throw new BAuthException("Unable to delete user, invalid data");
+        }
+    }
+
+    @Override
+    public boolean updateBalance(int account_number, double balance) {
+        try{
+            KeyHolder keyHolder= new GeneratedKeyHolder();
+            jdbcTemplate.update(connections->{
+                PreparedStatement preparedStatement= connections.prepareStatement(UPDATEBALANCE, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setDouble(1,balance);
+                preparedStatement.setInt(2,account_number);
+                return preparedStatement;
+            },keyHolder);
+            return keyHolder.getKeys().size()>0;
         }
         catch (Exception e)
         {

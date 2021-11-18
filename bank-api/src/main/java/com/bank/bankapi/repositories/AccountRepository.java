@@ -9,4 +9,6 @@ public interface AccountRepository {
     Account getAccountByAccNo(int accountnumber);
 
     boolean deleteAccount(int account_number) throws BAuthException;
+
+    boolean updateBalance(int account_number,double balance);
 }

@@ -185,7 +185,7 @@ public class UserResources {
             map.put("message","User do not exist");
             return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
-        map.put("Name", user.getFirst_name()+""+user.getLast_name());
+        map.put("Name", user.getFirst_name()+" "+user.getLast_name());
         map.put("Phone",user.getPhone());
         if(user.getCurrent_account_number()!=0)
         {
@@ -196,20 +196,20 @@ public class UserResources {
         if(user.getSaving_account_number()!=0)
         {
             Account account=accountService.getAccountByAccNo(user.getSaving_account_number());
-            map.put("Current_Account_Number",String.valueOf(user.getSaving_account_number()));
-            map.put("Current_Account_Balance",String.valueOf(account.getCurrent_balance()));
+            map.put("Saving_Account_Number",String.valueOf(user.getSaving_account_number()));
+            map.put("Saving_Account_Balance",String.valueOf(account.getCurrent_balance()));
         }
         if(user.getLoan_account_number()!=0)
         {
             Account account=accountService.getAccountByAccNo(user.getLoan_account_number());
-            map.put("Current_Account_Number",String.valueOf(user.getLoan_account_number()));
-            map.put("Current_Account_Balance",String.valueOf(account.getCurrent_balance()));
+            map.put("Loan_Account_Number",String.valueOf(user.getLoan_account_number()));
+            map.put("Loan_Account_Balance",String.valueOf(account.getCurrent_balance()));
         }
         if(user.getSalary_account_number()!=0)
         {
             Account account=accountService.getAccountByAccNo(user.getSalary_account_number());
-            map.put("Current_Account_Number",String.valueOf(user.getSalary_account_number()));
-            map.put("Current_Account_Balance",String.valueOf(account.getCurrent_balance()));
+            map.put("Salary_Account_Number",String.valueOf(user.getSalary_account_number()));
+            map.put("Salary_Account_Balance",String.valueOf(account.getCurrent_balance()));
         }
 
         return new ResponseEntity<>(map,HttpStatus.OK);

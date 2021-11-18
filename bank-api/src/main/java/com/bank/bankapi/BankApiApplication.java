@@ -17,7 +17,7 @@ public class BankApiApplication {
 		FilterRegistrationBean<AuthFilter> registrationBean = new FilterRegistrationBean<>();
 		AuthFilter authFilter = new AuthFilter();
 		registrationBean.setFilter(authFilter);
-		registrationBean.addUrlPatterns("/api/employee/register","/api/employee/delete","/api/user/*");
+		registrationBean.addUrlPatterns("/api/employee/register","/api/employee/delete","/api/user/*","/api/account/*");
 		return registrationBean;
 	}
 

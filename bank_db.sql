@@ -49,6 +49,9 @@ is_deleted boolean DEFAULT false,
 created_at timestamp with time zone DEFAULT now(),
 last_updated_at timestamp with time zone DEFAULT now()
 );
+alter table bt_accounts add constraint user_acc_fk
+foreign key (user_id) references bt_users(user_id);
+
 create sequence bt_employees_seq increment 1 start 1;
 create sequence bt_users_seq increment 1 start 1;
 create sequence bt_accounts_seq increment 1 start 1;

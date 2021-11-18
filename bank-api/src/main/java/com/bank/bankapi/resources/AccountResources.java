@@ -6,12 +6,14 @@ import com.bank.bankapi.domain.Transaction;
 import com.bank.bankapi.repositories.EmployeeRepository;
 import com.bank.bankapi.services.AccountService;
 import com.bank.bankapi.services.TransactionService;
+import com.itextpdf.text.DocumentException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -83,7 +85,7 @@ public class AccountResources {
     }
 
     @GetMapping("/transactions")
-    public ResponseEntity<Map<String,String>> getTransactions(@RequestBody Map<String,Object> data, HttpServletRequest request){
+    public ResponseEntity<Map<String,String>> getTransactions(@RequestBody Map<String,Object> data, HttpServletRequest request) throws FileNotFoundException, DocumentException {
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String, String> map= new HashMap<>();

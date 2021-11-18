@@ -104,65 +104,9 @@ public class UserResources {
         }
         String balance= (String)data.get("balance");
 
-        User user= userRepository.findUserById(Integer.valueOf(id));
-        if(user==null)
-        {
-            map.put("message","No such id exists");
-            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
-        }
-
-        if(user.getKyc_status()== User.Status.REJECTED || user.getKyc_status() == User.Status.UNVERIFIED)
-        {
-            map.put("message","Please get the kyc verified");
-            return new ResponseEntity<>(map,HttpStatus.OK);
-        }
-
-        Account account = new Account();
-        account.setUser_id(Integer.valueOf(id));
-        account.setCurrent_balance(Double.valueOf(balance));
-        account.setType(type);
-        boolean hasAccount=false;
-        switch (account.getType()){
-            case LOAN: if(user.getLoan_account_number()!=0)
-                hasAccount=true;
-                break;
-            case SALARY:if(user.getSalary_account_number()!=0)
-                hasAccount=true;
-                break;
-            case SAVING:if(user.getSaving_account_number()!=0)
-                hasAccount=true;
-                break;
-            case CURRENT:if(user.getCurrent_account_number()!=0)
-                hasAccount=true;
-                break;
-        }
-        if(hasAccount)
-        {
-            map.put("message","Account Already Exists");
-            return new ResponseEntity<>(map,HttpStatus.OK);
-
-        }
-
-        int accountNumber= accountService.createAccount(account);
-
-        switch (account.getType()){
-            case LOAN: user.setLoan_account_number(accountNumber);
-                        break;
-            case SALARY:user.setSalary_account_number(accountNumber);
-            break;
-            case SAVING:user.setSaving_account_number(accountNumber);
-            break;
-            case CURRENT:user.setCurrent_account_number(accountNumber);
-            break;
-            default: map.put("message","Invalid Account type");
-            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
-        }
-
-        boolean flag= userRepository.updateAccounts(user);
-        if(flag)
+        int accountNumber=userServices.createAccount(id,type,balance);
         map.put("account_number", String.valueOf(accountNumber));
-        else
-            map.put("message","Unable to create Account");
+
         return new ResponseEntity<>(map,HttpStatus.OK);
 
     }
@@ -228,39 +172,8 @@ public class UserResources {
             return new ResponseEntity<>(map, HttpStatus.OK);
         }
 
-        User user= userRepository.findUserById(Integer.parseInt(id));
-        if(user==null)
-        {
-            map.put("message","User do not exist");
-            return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
-        }
-        boolean flag=true;
-        if(user.getCurrent_account_number()!=0)
-        {
-             flag=accountService.deleteAccount(user.getCurrent_account_number());
 
-        }
-        if(user.getSaving_account_number()!=0)
-        {
-            flag=accountService.deleteAccount(user.getSaving_account_number());
-        }
-        if(user.getLoan_account_number()!=0)
-        {
-            flag=accountService.deleteAccount(user.getLoan_account_number());
-
-        }
-        if(user.getSalary_account_number()!=0)
-        {
-            flag=accountService.deleteAccount(user.getSalary_account_number());
-
-        }
-        if(!flag)
-        {
-            map.put("message","Unable to delete account");
-            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
-        }
-
-        flag=userServices.deleteUser(user.getUser_id());
+        boolean flag=userServices.deleteUser(Integer.parseInt(id));
         if(flag)
         {
             map.put("message","Deleted Successfully");

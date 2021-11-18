@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional
 public class TransactionServiceImpl implements TransactionService{
@@ -32,5 +34,11 @@ public class TransactionServiceImpl implements TransactionService{
             throw new BAuthException("Unable to update balance");
 
         return transactionId;
+    }
+
+    @Override
+    public boolean getTransaction(String start, String stop, int accountNumber) throws BAuthException {
+        List<Transaction> list= transactionRepository.getTransactions(start,stop,accountNumber);
+        return true;
     }
 }

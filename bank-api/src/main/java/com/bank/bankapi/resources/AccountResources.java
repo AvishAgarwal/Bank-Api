@@ -81,4 +81,31 @@ public class AccountResources {
         map.put("transaction_id",String.valueOf(transId));
         return new ResponseEntity<>(map,HttpStatus.OK);
     }
+
+    @GetMapping("/transactions")
+    public ResponseEntity<Map<String,String>> getTransactions(@RequestBody Map<String,Object> data, HttpServletRequest request){
+        int userID= (Integer) request.getAttribute("userId");
+        Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
+        Map<String, String> map= new HashMap<>();
+        if(employeeAuth==null )
+        {
+
+            map.put("message","You are not authorized to do this function");
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+        String start= (String)data.get("start");
+        String stop=(String)data.get("stop");
+        int accountNo=Integer.parseInt((String)data.get("account"));
+
+        Account Acc= accountService.getAccountByAccNo(accountNo);
+
+        if(Acc==null)
+        {
+            map.put("message","Account do not exist");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
+        transactionService.getTransaction(start,stop,accountNo);
+
+        return new ResponseEntity<>(map,HttpStatus.OK);
+    }
 }

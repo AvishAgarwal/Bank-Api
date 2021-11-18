@@ -1,20 +1,25 @@
 package com.bank.bankapi.repositories;
 
+import com.bank.bankapi.domain.Account;
 import com.bank.bankapi.domain.Transaction;
 import com.bank.bankapi.exceptions.BAuthException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.List;
 
 @Repository
 public class TransactioRepositoryImpl implements TransactionRepository{
     private static final String CREATETRANSACTION="insert into bt_transactions(transaction_id,from_id,to_id,amount,from_balance,to_balance,created_at)\n" +
             "values(NEXTVAL('bt_transactions_seq'),?,?,?,?,?,now())";
+    private static final String GETTRANSACTION="select * from bt_transactions where (from_id=? or to_id=?) " +
+            "and created_at between ?::timestamp and ?::timestamp";
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Override
@@ -39,4 +44,19 @@ public class TransactioRepositoryImpl implements TransactionRepository{
             throw new BAuthException("Unable to create transaction, invalid data");
         }
     }
+
+    @Override
+    public List<Transaction> getTransactions(String start, String stop, int accountNumber) {
+        return jdbcTemplate.query(GETTRANSACTION,userRowMapper,new Object[]{accountNumber,accountNumber,start,stop});
+    }
+
+    private RowMapper<Transaction> userRowMapper = ((rs, rowNum) -> {
+        return new Transaction(rs.getInt("transaction_id"),
+                rs.getInt("from_id"),
+                rs.getInt("to_id"),
+                rs.getDouble("amount"),
+                rs.getDouble("from_balance"),
+                rs.getDouble("to_balance"),
+                rs.getString("created_at"));
+    });
 }

@@ -9,10 +9,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
@@ -32,7 +29,7 @@ public class EmployeeResources {
     public ResponseEntity<Map<String,String>> registerEmployee(@RequestBody Map<String,Object> data, HttpServletRequest request){
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
-        if(employeeAuth==null ||employeeAuth.getRole() != Employee.Role.ADMIN )
+        if(employeeAuth==null ||employeeAuth.getRole() != Employee.Role.ADMIN || employeeAuth.is_active() == false)
         {
             Map<String, String> map= new HashMap<>();
             map.put("message","You are not authorized to do this function");
@@ -54,18 +51,28 @@ public class EmployeeResources {
 
         String phone= (String)data.get("phone");
         String password=(String)data.get("password");
-        Employee employee= employeeService.validateEmployee(phone,password);
+        Employee employee= employeeService.validateEmployee(phone,password,true);
+
+        return new ResponseEntity<>(generateJWTToken(employee), HttpStatus.OK);
+
+    }
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String,String>> logoutEmployee(@RequestBody Map<String,Object> data){
+
+        String phone= (String)data.get("phone");
+        String password=(String)data.get("password");
+        Employee employee= employeeService.validateEmployee(phone,password,false);
 
         return new ResponseEntity<>(generateJWTToken(employee), HttpStatus.OK);
 
     }
 
-    @PostMapping("/delete")
+    @PutMapping("/delete")
     public ResponseEntity<Map<String,String>> deleteEmployee(@RequestBody Map<String,Object> data, HttpServletRequest request){
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String, String> map = new HashMap<>();
-        if(employeeAuth==null ||employeeAuth.getRole() != Employee.Role.ADMIN )
+        if(employeeAuth==null ||employeeAuth.getRole() != Employee.Role.ADMIN || employeeAuth.is_active() == false)
         {
             map.put("message","You are not authorized to do this function");
             return new ResponseEntity<>(map,HttpStatus.OK);

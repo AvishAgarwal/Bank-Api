@@ -35,7 +35,7 @@ public class UserResources {
     public ResponseEntity<Map<String,String>> registerUser(@RequestBody Map<String,Object> data, HttpServletRequest request){
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
-        if(employeeAuth==null )
+        if(employeeAuth==null || employeeAuth.is_active() == false)
         {
             Map<String, String> map= new HashMap<>();
             map.put("message","You are not authorized to do this function");
@@ -49,7 +49,7 @@ public class UserResources {
         User user= userServices.registerUser(firstName,lastName,password,userID ,phone);
 
         Map<String,String> map= new HashMap<>();
-        map.put("message","User has been registered");
+        map.put("id", String.valueOf(user.getUser_id()));
         return new ResponseEntity<>(map,HttpStatus.OK);
 
     }
@@ -58,7 +58,7 @@ public class UserResources {
     public ResponseEntity<Map<String,String>> updateKyc(@RequestBody Map<String,Object> data, HttpServletRequest request){
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
-        if(employeeAuth==null )
+        if(employeeAuth==null || employeeAuth.is_active() == false)
         {
             Map<String, String> map= new HashMap<>();
             map.put("message","You are not authorized to do this function");
@@ -85,7 +85,7 @@ public class UserResources {
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String, String> map= new HashMap<>();
-        if(employeeAuth==null )
+        if(employeeAuth==null || employeeAuth.is_active() == false)
         {
 
             map.put("message","You are not authorized to do this function");
@@ -160,7 +160,7 @@ public class UserResources {
 
         boolean flag= userRepository.updateAccounts(user);
         if(flag)
-        map.put("message","Account Created");
+        map.put("account_number", String.valueOf(accountNumber));
         else
             map.put("message","Unable to create Account");
         return new ResponseEntity<>(map,HttpStatus.OK);
@@ -172,7 +172,7 @@ public class UserResources {
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String,String> map= new HashMap<>();
-        if(employeeAuth==null )
+        if(employeeAuth==null || employeeAuth.is_active() == false)
         {
 
             map.put("message","You are not authorized to do this function");
@@ -221,7 +221,7 @@ public class UserResources {
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String,String> map= new HashMap<>();
-        if(employeeAuth==null )
+        if(employeeAuth==null || employeeAuth.is_active() == false)
         {
 
             map.put("message","You are not authorized to do this function");

@@ -33,7 +33,7 @@ public class AccountResources {
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String, String> map= new HashMap<>();
-        if(employeeAuth==null )
+        if(employeeAuth==null || employeeAuth.is_active() == false )
         {
             map.put("message","You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.OK);
@@ -63,7 +63,7 @@ public class AccountResources {
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String, String> map= new HashMap<>();
-        if(employeeAuth==null )
+        if(employeeAuth==null || employeeAuth.is_active() == false)
         {
 
             map.put("message","You are not authorized to do this function");
@@ -90,7 +90,7 @@ public class AccountResources {
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String, String> map= new HashMap<>();
-        if(employeeAuth==null )
+        if(employeeAuth==null || employeeAuth.is_active() == false)
         {
 
             map.put("message","You are not authorized to do this function");
@@ -117,7 +117,7 @@ public class AccountResources {
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String, String> map= new HashMap<>();
-        if(employeeAuth==null )
+        if(employeeAuth==null || employeeAuth.is_active() == false)
         {
 
             map.put("message","You are not authorized to do this function");

@@ -24,6 +24,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     private static final String GET_EMPLOYEE_BY_ID ="select * from bt_employees where user_id= ? and is_deleted=false";
     private static final String GET_EMPLOYEE_BY_PHONE ="select * from bt_employees where phone=? and is_deleted=false";
     private static final String DELETE_EMPLOYEE_WITH_PHONE="update bt_employees set is_deleted= true ,  last_updated_at=now() where phone = ?";
+    private static final String UPDATEISACTIVE="update bt_employees set is_active= ? ,  last_updated_at=now() where phone = ?";
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -92,6 +93,25 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
                 return preparedStatement;
             },keyHolder);
             return (boolean) keyHolder.getKeys().get("is_deleted");
+        }
+        catch (Exception e)
+        {
+            throw new BAuthException("Unable to delete Employee, invalid data");
+        }
+    }
+
+    @Override
+    public boolean updateEmployeeIsActive(Employee employee) {
+        try{
+            KeyHolder keyHolder= new GeneratedKeyHolder();
+            jdbcTemplate.update(connections->{
+                PreparedStatement preparedStatement= connections.prepareStatement(UPDATEISACTIVE, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setBoolean(1,employee.is_active());
+                preparedStatement.setString(2,employee.getPhone());
+
+                return preparedStatement;
+            },keyHolder);
+            return (boolean) keyHolder.getKeys().get("is_active");
         }
         catch (Exception e)
         {

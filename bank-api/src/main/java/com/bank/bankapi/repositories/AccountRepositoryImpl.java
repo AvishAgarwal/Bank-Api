@@ -15,11 +15,12 @@ import java.sql.Statement;
 
 @Repository
 public class AccountRepositoryImpl implements AccountRepository{
-    private static final String CREATEACCOUNT="insert into bt_accounts(account_number,user_id,type,current_balance,is_deleted,created_at,last_updated_at) \n" +
-            "values(NEXTVAL('bt_accounts_seq'),?,?,?,false,now(),now());";
+    private static final String CREATEACCOUNT="insert into bt_accounts(account_number,user_id,type,current_balance,is_deleted,created_at,last_updated_at,last_interest_added) \n" +
+            "values(NEXTVAL('bt_accounts_seq'),?,?,?,false,now(),now(),now());";
     private static final String GETACCOUNTBYNUMBER="Select * from bt_accounts where account_number=? and is_deleted=false";
     private static final String DELETEACCOUNT="update bt_accounts set is_deleted= true ,  last_updated_at=now() where account_number=?";
     private static final String UPDATEBALANCE="update bt_accounts set current_balance=? ,  last_updated_at=now() where account_number=?";
+    private static final String UPDATEINTEREST="update bt_accounts set current_balance=? ,  last_updated_at=now(),last_interest_added=now() where account_number=?";
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Override
@@ -83,6 +84,24 @@ public class AccountRepositoryImpl implements AccountRepository{
         }
     }
 
+    @Override
+    public boolean updateInterest(int account_number, double balance) {
+        try{
+            KeyHolder keyHolder= new GeneratedKeyHolder();
+            jdbcTemplate.update(connections->{
+                PreparedStatement preparedStatement= connections.prepareStatement(UPDATEINTEREST, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setDouble(1,balance);
+                preparedStatement.setInt(2,account_number);
+                return preparedStatement;
+            },keyHolder);
+            return keyHolder.getKeys().size()>0;
+        }
+        catch (Exception e)
+        {
+            throw new BAuthException("Unable to delete user, invalid data");
+        }
+    }
+
     private RowMapper<Account> userRowMapper = ((rs, rowNum) -> {
         return new Account(rs.getInt("account_number"),
                 rs.getInt("user_id"),
@@ -90,6 +109,7 @@ public class AccountRepositoryImpl implements AccountRepository{
                 rs.getDouble("current_balance"),
                 rs.getBoolean("is_deleted"),
                 rs.getString("created_at"),
-                rs.getString("last_updated_at"));
+                rs.getString("last_updated_at"),
+                rs.getString("last_interest_added"));
     });
 }

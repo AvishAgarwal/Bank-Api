@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.FileNotFoundException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -107,7 +108,34 @@ public class AccountResources {
             return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
         }
         transactionService.getTransaction(start,stop,accountNo);
+        map.put("message","Pdf created");
+        return new ResponseEntity<>(map,HttpStatus.OK);
+    }
 
+    @PutMapping("/interest")
+    public ResponseEntity<Map<String,String>> addInterest(@RequestBody Map<String,Object> data, HttpServletRequest request) throws FileNotFoundException, DocumentException, ParseException {
+        int userID= (Integer) request.getAttribute("userId");
+        Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
+        Map<String, String> map= new HashMap<>();
+        if(employeeAuth==null )
+        {
+
+            map.put("message","You are not authorized to do this function");
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+        int from= Integer.parseInt((String)data.get("from"));
+        int to= Integer.parseInt((String)data.get("to"));
+
+        Account fromAcc=accountService.getAccountByAccNo(from);
+        Account toAcc=accountService.getAccountByAccNo(to);
+
+        if(fromAcc==null || toAcc==null)
+        {
+            map.put("message","Account do not exist");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
+        int id=transactionService.addInterest(fromAcc,toAcc);
+        map.put("transaction_id", String.valueOf(id));
         return new ResponseEntity<>(map,HttpStatus.OK);
     }
 }

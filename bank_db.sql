@@ -16,7 +16,8 @@ password text not null,
 role text,
 is_deleted boolean default false,
 created_at timestamp with time zone DEFAULT now(),
-last_updated_at timestamp with time zone DEFAULT now()
+last_updated_at timestamp with time zone DEFAULT now(),
+is_active boolean default false
 );
 
 create table bt_users(
@@ -47,7 +48,8 @@ type text not null,
 current_balance numeric(11,3) not null,
 is_deleted boolean DEFAULT false,
 created_at timestamp with time zone DEFAULT now(),
-last_updated_at timestamp with time zone DEFAULT now()
+last_updated_at timestamp with time zone DEFAULT now(),
+last_interest_added timestamp with time zone DEFAULT now()
 );
 alter table bt_accounts add constraint user_acc_fk
 foreign key (user_id) references bt_users(user_id);

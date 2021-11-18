@@ -19,7 +19,7 @@ public class TransactioRepositoryImpl implements TransactionRepository{
     private static final String CREATETRANSACTION="insert into bt_transactions(transaction_id,from_id,to_id,amount,from_balance,to_balance,created_at)\n" +
             "values(NEXTVAL('bt_transactions_seq'),?,?,?,?,?,now())";
     private static final String GETTRANSACTION="select * from bt_transactions where (from_id=? or to_id=?) " +
-            "and created_at between ?::timestamp and ?::timestamp";
+            "and created_at between ?::timestamp and ?::timestamp order by created_at desc";
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Override

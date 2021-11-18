@@ -17,6 +17,7 @@ public class Account {
     boolean is_deleted;
     String created_at;
     String last_updated_at;
+    String last_interest_added;
 
     public enum Type {
         CURRENT,

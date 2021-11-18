@@ -11,4 +11,5 @@ public interface AccountRepository {
     boolean deleteAccount(int account_number) throws BAuthException;
 
     boolean updateBalance(int account_number,double balance);
+    boolean updateInterest(int account_number,double balance);
 }

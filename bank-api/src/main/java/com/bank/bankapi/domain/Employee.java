@@ -17,6 +17,7 @@ public class Employee {
     boolean is_deleted ;
     String created_at ;
     String last_updated_at;
+    boolean is_active;
 
     public enum Role {
         ADMIN,

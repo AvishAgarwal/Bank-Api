@@ -17,8 +17,8 @@ import java.sql.Statement;
 @Repository
 public class EmployeeRepositoryImpl implements EmployeeRepository{
 
-    private static final String CREATE_SQL ="insert into bt_employees(user_id,first_name,last_name,phone,password,role,is_deleted,created_at,last_updated_at)" +
-            " values(NEXTVAL('bt_employees_seq'), ?, ?, ?, ?,?,false,now(),now())";
+    private static final String CREATE_SQL ="insert into bt_employees(user_id,first_name,last_name,phone,password,role,is_deleted,created_at,last_updated_at,is_active)" +
+            " values(NEXTVAL('bt_employees_seq'), ?, ?, ?, ?,?,false,now(),now(),false)";
     private static final String COUNT_EMPLOYEE_WITH_PHONE = "select count(*) from bt_employees where phone= ? and is_deleted=false";
 
     private static final String GET_EMPLOYEE_BY_ID ="select * from bt_employees where user_id= ? and is_deleted=false";
@@ -108,6 +108,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
                 Employee.Role.valueOf(rs.getString("role")),
                 rs.getBoolean("is_deleted"),
                 rs.getString("created_at"),
-                rs.getString("last_updated_at"));
+                rs.getString("last_updated_at"),
+                rs.getBoolean("is_active"));
     });
 }

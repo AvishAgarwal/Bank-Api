@@ -18,6 +18,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.text.CharacterIterator;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.text.StringCharacterIterator;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -59,6 +69,45 @@ public class TransactionServiceImpl implements TransactionService{
         document.close();
         return true;
     }
+
+    @Override
+    public Integer addInterest(Account from, Account to) throws BAuthException, ParseException {
+        long days=getDaysBetween(to.getLast_interest_added());
+        long years=days/365;
+        double interest= to.getCurrent_balance()*0.035*years;
+        double amount=to.getCurrent_balance()+interest;
+        if(years>=1) {
+            to.setCurrent_balance(amount);
+            from.setCurrent_balance(from.getCurrent_balance()-interest);
+            accountRepository.updateInterest(to.getAccount_number(), to.getCurrent_balance());
+            accountRepository.updateBalance(from.getAccount_number(), from.getCurrent_balance());
+           return transactionRepository.createTransaction(from.getAccount_number(), to.getAccount_number(), amount, from.getCurrent_balance(), to.getCurrent_balance());
+        }
+        return 0;
+    }
+    private long getDaysBetween(String  date) throws ParseException {
+        CharacterIterator it
+                = new StringCharacterIterator(date);
+        String prevDate="";
+
+        while (it.current() != CharacterIterator.DONE) {
+            if (it.current()==' ')
+                break;
+            prevDate+=it.current();
+            it.next();
+        }
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate date1 = LocalDate.parse(prevDate, dtf);
+        String now = dtf.format(LocalDateTime.now());
+        LocalDate date2=LocalDate.parse(now,dtf);
+        long daysInBetween= ChronoUnit.DAYS.between(date1, date2);
+
+        return daysInBetween;
+    }
+
+
+
     private void addTableHeader(PdfPTable table) {
         Stream.of("Date", "Account", "Amount","Balance","Type")
                 .forEach(columnTitle -> {

@@ -1,9 +1,11 @@
 package com.bank.bankapi.repositories;
 
 import com.bank.bankapi.domain.Account;
+import com.bank.bankapi.domain.User;
 import com.bank.bankapi.exceptions.BAuthException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -15,6 +17,8 @@ import java.sql.Statement;
 public class AccountRepositoryImpl implements AccountRepository{
     private static final String CREATEACCOUNT="insert into bt_accounts(account_number,user_id,type,current_balance,is_deleted,created_at,last_updated_at) \n" +
             "values(NEXTVAL('bt_accounts_seq'),?,?,?,false,now(),now());";
+    private static final String GETACCOUNTBYNUMBER="Select * from bt_accounts where account_number=? and is_deleted=false";
+    private static final String DELETEACCOUNT="update bt_accounts set is_deleted= true ,  last_updated_at=now() where account_number=?";
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Override
@@ -39,7 +43,34 @@ public class AccountRepositoryImpl implements AccountRepository{
     }
 
     @Override
-    public Account getAccountByAccNo(Account account) {
-        return null;
+    public Account getAccountByAccNo(int accountNumber) {
+        return jdbcTemplate.queryForObject(GETACCOUNTBYNUMBER,userRowMapper,new Object[]{accountNumber});
     }
+
+    @Override
+    public boolean deleteAccount(int account_number) throws BAuthException {
+        try{
+            KeyHolder keyHolder= new GeneratedKeyHolder();
+            jdbcTemplate.update(connections->{
+                PreparedStatement preparedStatement= connections.prepareStatement(DELETEACCOUNT, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setInt(1,account_number);
+                return preparedStatement;
+            },keyHolder);
+            return (boolean) keyHolder.getKeys().get("is_deleted");
+        }
+        catch (Exception e)
+        {
+            throw new BAuthException("Unable to delete user, invalid data");
+        }
+    }
+
+    private RowMapper<Account> userRowMapper = ((rs, rowNum) -> {
+        return new Account(rs.getInt("account_number"),
+                rs.getInt("user_id"),
+                Account.Type.valueOf(rs.getString("type")),
+                rs.getDouble("current_balance"),
+                rs.getBoolean("is_deleted"),
+                rs.getString("created_at"),
+                rs.getString("last_updated_at"));
+    });
 }

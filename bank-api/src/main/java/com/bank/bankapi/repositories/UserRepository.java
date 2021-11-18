@@ -13,4 +13,6 @@ public interface UserRepository {
     boolean updateKyc(String phone, String adhaar, User.Status status) throws BAuthException;
 
     boolean updateAccounts(User user);
+
+    boolean deleteUserById(int user_id)throws BAuthException;
 }

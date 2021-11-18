@@ -6,5 +6,7 @@ import com.bank.bankapi.exceptions.BAuthException;
 public interface AccountRepository {
     Integer createAccount(Account account) throws BAuthException;
 
-    Account getAccountByAccNo(Account account);
+    Account getAccountByAccNo(int accountnumber);
+
+    boolean deleteAccount(int account_number) throws BAuthException;
 }

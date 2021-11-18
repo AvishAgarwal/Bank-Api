@@ -22,7 +22,12 @@ public class AccountServiceImpl implements AccountService{
     }
 
     @Override
-    public Account getAccountByAccNo(Account account) {
-        return accountRepository.getAccountByAccNo(account);
+    public Account getAccountByAccNo(int accountNumber) {
+        return accountRepository.getAccountByAccNo(accountNumber);
+    }
+
+    @Override
+    public boolean deleteAccount(int accountNumber) throws BAuthException {
+        return accountRepository.deleteAccount(accountNumber);
     }
 }

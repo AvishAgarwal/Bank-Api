@@ -7,12 +7,14 @@ import com.bank.bankapi.repositories.EmployeeRepository;
 import com.bank.bankapi.repositories.UserRepository;
 import com.bank.bankapi.services.AccountService;
 import com.bank.bankapi.services.UserServices;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.PathParam;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -164,4 +166,113 @@ public class UserResources {
         return new ResponseEntity<>(map,HttpStatus.OK);
 
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String,String>> getUserInfo( @PathVariable("id") String id, HttpServletRequest request){
+        int userID= (Integer) request.getAttribute("userId");
+        Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
+        Map<String,String> map= new HashMap<>();
+        if(employeeAuth==null )
+        {
+
+            map.put("message","You are not authorized to do this function");
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+
+        User user= userRepository.findUserById(Integer.parseInt(id));
+        if(user==null)
+        {
+            map.put("message","User do not exist");
+            return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+        }
+        map.put("Name", user.getFirst_name()+""+user.getLast_name());
+        map.put("Phone",user.getPhone());
+        if(user.getCurrent_account_number()!=0)
+        {
+            Account account=accountService.getAccountByAccNo(user.getCurrent_account_number());
+            map.put("Current_Account_Number",String.valueOf(user.getCurrent_account_number()));
+            map.put("Current_Account_Balance",String.valueOf(account.getCurrent_balance()));
+        }
+        if(user.getSaving_account_number()!=0)
+        {
+            Account account=accountService.getAccountByAccNo(user.getSaving_account_number());
+            map.put("Current_Account_Number",String.valueOf(user.getSaving_account_number()));
+            map.put("Current_Account_Balance",String.valueOf(account.getCurrent_balance()));
+        }
+        if(user.getLoan_account_number()!=0)
+        {
+            Account account=accountService.getAccountByAccNo(user.getLoan_account_number());
+            map.put("Current_Account_Number",String.valueOf(user.getLoan_account_number()));
+            map.put("Current_Account_Balance",String.valueOf(account.getCurrent_balance()));
+        }
+        if(user.getSalary_account_number()!=0)
+        {
+            Account account=accountService.getAccountByAccNo(user.getSalary_account_number());
+            map.put("Current_Account_Number",String.valueOf(user.getSalary_account_number()));
+            map.put("Current_Account_Balance",String.valueOf(account.getCurrent_balance()));
+        }
+
+        return new ResponseEntity<>(map,HttpStatus.OK);
+
+    }
+
+    @PutMapping("/delete/{id}")
+    public ResponseEntity<Map<String,String>> deleteUser( @PathVariable("id") String id, HttpServletRequest request){
+        int userID= (Integer) request.getAttribute("userId");
+        Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
+        Map<String,String> map= new HashMap<>();
+        if(employeeAuth==null )
+        {
+
+            map.put("message","You are not authorized to do this function");
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+
+        User user= userRepository.findUserById(Integer.parseInt(id));
+        if(user==null)
+        {
+            map.put("message","User do not exist");
+            return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+        }
+        boolean flag=true;
+        if(user.getCurrent_account_number()!=0)
+        {
+             flag=accountService.deleteAccount(user.getCurrent_account_number());
+
+        }
+        if(user.getSaving_account_number()!=0)
+        {
+            flag=accountService.deleteAccount(user.getSaving_account_number());
+        }
+        if(user.getLoan_account_number()!=0)
+        {
+            flag=accountService.deleteAccount(user.getLoan_account_number());
+
+        }
+        if(user.getSalary_account_number()!=0)
+        {
+            flag=accountService.deleteAccount(user.getSalary_account_number());
+
+        }
+        if(!flag)
+        {
+            map.put("message","Unable to delete account");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
+
+        flag=userServices.deleteUser(user.getUser_id());
+        if(flag)
+        {
+            map.put("message","Deleted Successfully");
+        }
+        else
+        {
+            map.put("message","unable to delete");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(map,HttpStatus.OK);
+
+    }
+
 }

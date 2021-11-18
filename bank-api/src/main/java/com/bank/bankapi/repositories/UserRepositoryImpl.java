@@ -23,6 +23,7 @@ public class UserRepositoryImpl implements UserRepository{
     private static final String GETUSERBYID="select * from bt_users where user_id= ? and is_deleted=false";
     private static final String UPDATEKYC="update bt_users set kyc_status= ? ,adhaar_number=?  ,last_updated_at=now() where phone = ? and is_deleted=false";
     private static final String UPDATEACCOUNTS="update bt_users set current_account_number = ?, saving_account_number= ?,loan_account_number =?, salary_account_number=?,last_updated_at=now() where user_id=? and is_deleted=false";
+    private static final String DELETEUSER="update bt_users set is_deleted= true ,  last_updated_at=now() where user_id = ?";
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Override
@@ -103,6 +104,23 @@ public class UserRepositoryImpl implements UserRepository{
         catch (Exception e)
         {
             throw new BAuthException("Unable to update account, invalid data");
+        }
+    }
+
+    @Override
+    public boolean deleteUserById(int user_id) throws BAuthException {
+        try{
+            KeyHolder keyHolder= new GeneratedKeyHolder();
+            jdbcTemplate.update(connections->{
+                PreparedStatement preparedStatement= connections.prepareStatement(DELETEUSER, Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setInt(1,user_id);
+                return preparedStatement;
+            },keyHolder);
+            return (boolean) keyHolder.getKeys().get("is_deleted");
+        }
+        catch (Exception e)
+        {
+            throw new BAuthException("Unable to delete user, invalid data");
         }
     }
 

@@ -38,4 +38,9 @@ public class UserServiceImpl implements UserServices{
 
             return userRepository.updateKyc(phone,adhaar,status);
     }
+
+    @Override
+    public boolean deleteUser(int user_id) throws BAuthException {
+        return userRepository.deleteUserById(user_id);
+    }
 }

@@ -9,4 +9,6 @@ public interface EmployeeService {
     Employee registerEmployee(String firstName, String lastName, String password, Employee.Role role, String phone) throws BAuthException;
 
     boolean deleteEmployee(String phone) throws BAuthException;
+
+    Employee logout(Employee employee) throws BAuthException;
 }

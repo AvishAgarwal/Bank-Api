@@ -4,6 +4,7 @@ import com.bank.bankapi.Constants;
 import com.bank.bankapi.domain.Employee;
 import com.bank.bankapi.repositories.EmployeeRepository;
 import com.bank.bankapi.services.EmployeeService;
+import com.bank.bankapi.util.GenerateJWTToken;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class has all the api which we need to do all the admin can do related to employee
+ */
 @RestController
 @RequestMapping("/api/employee")
 public class EmployeeResources {
@@ -24,7 +28,15 @@ public class EmployeeResources {
     EmployeeService employeeService;
     @Autowired
     EmployeeRepository employeeRepository;
+    @Autowired
+    GenerateJWTToken generateJWTToken;
 
+    /**Api to register employee
+     *
+     * @param data data contains first name , last name, phone , password
+     * @param request request contains the authorization token
+     * @return it return success message
+     */
     @PostMapping("/register")
     public ResponseEntity<Map<String,String>> registerEmployee(@RequestBody Map<String,Object> data, HttpServletRequest request){
         int userID= (Integer) request.getAttribute("userId");
@@ -33,7 +45,7 @@ public class EmployeeResources {
         {
             Map<String, String> map= new HashMap<>();
             map.put("message","You are not authorized to do this function");
-            return new ResponseEntity<>(map,HttpStatus.OK);
+            return new ResponseEntity<>(map,HttpStatus.UNAUTHORIZED);
         }
         String firstName = (String)data.get("firstName");
         String lastName= (String)data.get("lastName");
@@ -46,28 +58,51 @@ public class EmployeeResources {
 
     }
 
-    @PostMapping("/login")
+    /** Api to login
+     *
+     * @param data contains phone and password
+     * @return Auth token
+     */
+    @PutMapping("/login")
     public ResponseEntity<Map<String,String>> loginEmployee(@RequestBody Map<String,Object> data){
 
         String phone= (String)data.get("phone");
         String password=(String)data.get("password");
         Employee employee= employeeService.validateEmployee(phone,password,true);
 
-        return new ResponseEntity<>(generateJWTToken(employee), HttpStatus.OK);
-
-    }
-    @PostMapping("/logout")
-    public ResponseEntity<Map<String,String>> logoutEmployee(@RequestBody Map<String,Object> data){
-
-        String phone= (String)data.get("phone");
-        String password=(String)data.get("password");
-        Employee employee= employeeService.validateEmployee(phone,password,false);
-
-        return new ResponseEntity<>(generateJWTToken(employee), HttpStatus.OK);
+        return new ResponseEntity<>(generateJWTToken.generateJWTToken(employee), HttpStatus.OK);
 
     }
 
-    @PutMapping("/delete")
+    /**
+     * Log out functionality
+     * @param request contains user_id of employee
+     * @return Success message
+     */
+    @PutMapping("/logout")
+    public ResponseEntity<Map<String,String>> logoutEmployee( HttpServletRequest request){
+        int userID= (Integer) request.getAttribute("userId");
+        Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
+        Map<String, String> map = new HashMap<>();
+        if(employeeAuth==null ||employeeAuth.getRole() != Employee.Role.ADMIN || employeeAuth.is_active() == false)
+        {
+            map.put("message","You are not authorized to do this function");
+            return new ResponseEntity<>(map,HttpStatus.UNAUTHORIZED);
+        }
+
+        Employee employee= employeeService.logout(employeeAuth);
+        map.put("message","Employee has been logged out");
+        return new ResponseEntity<>(map, HttpStatus.OK);
+
+    }
+
+    /**
+     * Soft delete a employee
+     * @param data contains phone number of employee
+     * @param request   success message
+     * @return
+     */
+    @DeleteMapping("/delete")
     public ResponseEntity<Map<String,String>> deleteEmployee(@RequestBody Map<String,Object> data, HttpServletRequest request){
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
@@ -75,31 +110,20 @@ public class EmployeeResources {
         if(employeeAuth==null ||employeeAuth.getRole() != Employee.Role.ADMIN || employeeAuth.is_active() == false)
         {
             map.put("message","You are not authorized to do this function");
-            return new ResponseEntity<>(map,HttpStatus.OK);
+            return new ResponseEntity<>(map,HttpStatus.UNAUTHORIZED);
         }
         String phone= (String)data.get("phone");
         boolean flag= employeeService.deleteEmployee(phone);
-        if(flag)
-            map.put("message","Employee Deleted Successfully");
-        else
-            map.put("message","Unable to Delete the Employee");
-        return new ResponseEntity<>(map, HttpStatus.OK);
+        if(flag) {
+            map.put("message", "Employee Deleted Successfully");
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        else {
+            map.put("message", "Unable to Delete the Employee");
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
 
     }
 
-    private Map<String, String> generateJWTToken(Employee employee) {
-        long timestamp = System.currentTimeMillis();
-        String token = Jwts.builder().signWith(SignatureAlgorithm.HS256, Constants.KEY)
-                .setIssuedAt(new Date(timestamp))
-                .setExpiration(new Date(timestamp + Constants.VALIDITY))
-                .claim("userId", employee.getUser_id())
-                .claim("phone", employee.getPhone())
-                .claim("firstName", employee.getFirst_name())
-                .claim("lastName", employee.getLast_name())
-                .claim("role",employee.getRole())
-                .compact();
-        Map<String, String> map = new HashMap<>();
-        map.put("token", token);
-        return map;
-    }
+
 }

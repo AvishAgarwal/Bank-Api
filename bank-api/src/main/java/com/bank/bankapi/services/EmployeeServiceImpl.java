@@ -14,6 +14,9 @@ public class EmployeeServiceImpl implements EmployeeService{
     @Autowired
     EmployeeRepository employeeRepository;
     @Override
+    /**
+     * Checking employee updating is_active status
+     */
     public Employee validateEmployee(String phone, String password, boolean status) throws BAuthException {
         if(phone.length()!=10)
             throw new BAuthException("Invalid Phone Number");
@@ -24,6 +27,16 @@ public class EmployeeServiceImpl implements EmployeeService{
         return employee;
     }
 
+    /**
+     * Register new Employee
+     * @param firstName
+     * @param lastName
+     * @param password
+     * @param role
+     * @param phone
+     * @return
+     * @throws BAuthException
+     */
     @Override
     public Employee registerEmployee( String firstName, String lastName, String password, Employee.Role role, String phone) throws BAuthException {
         if(phone.length()!=10)
@@ -39,12 +52,26 @@ public class EmployeeServiceImpl implements EmployeeService{
         return employee;
     }
 
+    /**
+     *
+     * @param phone
+     * @return
+     * @throws BAuthException
+     */
     @Override
     public boolean deleteEmployee(String phone) throws BAuthException {
         if(phone.length()!=10)
             throw new BAuthException("Invalid Phone Number");
        return employeeRepository.deleteEmployeeByPhone(phone);
 
+    }
+
+    @Override
+    public Employee logout(Employee employee) throws BAuthException {
+        employee.set_active(false);
+        employeeRepository.updateEmployeeIsActive(employee);
+
+        return employee;
     }
 
 }

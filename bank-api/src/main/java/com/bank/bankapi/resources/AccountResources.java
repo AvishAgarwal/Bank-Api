@@ -36,7 +36,7 @@ public class AccountResources {
         if(employeeAuth==null || employeeAuth.is_active() == false )
         {
             map.put("message","You are not authorized to do this function");
-            return new ResponseEntity<>(map, HttpStatus.OK);
+            return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }
 
         if(accountNumber == null || accountNumber.length()==0)
@@ -59,7 +59,7 @@ public class AccountResources {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<Map<String,String>> createAccount(@RequestBody Map<String,Object> data, HttpServletRequest request){
+    public ResponseEntity<Map<String,String>> transfer(@RequestBody Map<String,Object> data, HttpServletRequest request){
         int userID= (Integer) request.getAttribute("userId");
         Employee employeeAuth =  employeeRepository.findEmployeeById(userID);
         Map<String, String> map= new HashMap<>();
@@ -119,7 +119,6 @@ public class AccountResources {
         Map<String, String> map= new HashMap<>();
         if(employeeAuth==null || employeeAuth.is_active() == false)
         {
-
             map.put("message","You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.OK);
         }

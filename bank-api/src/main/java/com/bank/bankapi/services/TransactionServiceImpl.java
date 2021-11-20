@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class TransactionServiceImpl implements TransactionService{
+public class TransactionServiceImpl implements TransactionService {
     @Autowired
     TransactionRepository transactionRepository;
     @Autowired
@@ -42,15 +42,15 @@ public class TransactionServiceImpl implements TransactionService{
 
     @Override
     public Integer createTransaction(Account from, Account to, double amount) throws BAuthException {
-        from.setCurrent_balance(from.getCurrent_balance()-amount);
-        to.setCurrent_balance(to.getCurrent_balance()+amount);
+        from.setCurrent_balance(from.getCurrent_balance() - amount);
+        to.setCurrent_balance(to.getCurrent_balance() + amount);
 
-        int transactionId =transactionRepository.createTransaction(from.getAccount_number(),to.getAccount_number(),amount,
+        int transactionId = transactionRepository.createTransaction(from.getAccount_number(), to.getAccount_number(), amount,
                 from.getCurrent_balance(), to.getCurrent_balance());
-        boolean flag1= accountRepository.updateBalance(from.getAccount_number(), from.getCurrent_balance());
+        boolean flag1 = accountRepository.updateBalance(from.getAccount_number(), from.getCurrent_balance());
 
-        boolean flag2=accountRepository.updateBalance(to.getAccount_number(), to.getCurrent_balance());
-        if(!flag1 && !flag2)
+        boolean flag2 = accountRepository.updateBalance(to.getAccount_number(), to.getCurrent_balance());
+        if (!flag1 && !flag2)
             throw new BAuthException("Unable to update balance");
 
         return transactionId;
@@ -58,13 +58,13 @@ public class TransactionServiceImpl implements TransactionService{
 
     @Override
     public boolean getTransaction(String start, String stop, int accountNumber) throws BAuthException, FileNotFoundException, DocumentException {
-        List<Transaction> list= transactionRepository.getTransactions(start,stop,accountNumber);
-        Document document=new Document();
+        List<Transaction> list = transactionRepository.getTransactions(start, stop, accountNumber);
+        Document document = new Document();
         PdfWriter.getInstance(document, new FileOutputStream("transactions.pdf"));
         document.open();
-        PdfPTable table= new PdfPTable(5);
+        PdfPTable table = new PdfPTable(5);
         addTableHeader(table);
-        addRows(table,list,accountNumber);
+        addRows(table, list, accountNumber);
         document.add(table);
         document.close();
         return true;
@@ -72,44 +72,44 @@ public class TransactionServiceImpl implements TransactionService{
 
     @Override
     public Integer addInterest(Account from, Account to) throws BAuthException, ParseException {
-        long days=getDaysBetween(to.getLast_interest_added());
-        long years=days/365;
-        double interest= to.getCurrent_balance()*0.035*years;
-        double amount=to.getCurrent_balance()+interest;
-        if(years>=1) {
+        long days = getDaysBetween(to.getLast_interest_added());
+        long years = days / 365;
+        double interest = to.getCurrent_balance() * 0.035 * years;
+        double amount = to.getCurrent_balance() + interest;
+        if (years >= 1) {
             to.setCurrent_balance(amount);
-            from.setCurrent_balance(from.getCurrent_balance()-interest);
+            from.setCurrent_balance(from.getCurrent_balance() - interest);
             accountRepository.updateInterest(to.getAccount_number(), to.getCurrent_balance());
             accountRepository.updateBalance(from.getAccount_number(), from.getCurrent_balance());
-           return transactionRepository.createTransaction(from.getAccount_number(), to.getAccount_number(), amount, from.getCurrent_balance(), to.getCurrent_balance());
+            return transactionRepository.createTransaction(from.getAccount_number(), to.getAccount_number(), amount, from.getCurrent_balance(), to.getCurrent_balance());
         }
         return 0;
     }
-    private long getDaysBetween(String  date) throws ParseException {
+
+    private long getDaysBetween(String date) throws ParseException {
         CharacterIterator it
                 = new StringCharacterIterator(date);
-        String prevDate="";
+        String prevDate = "";
 
         while (it.current() != CharacterIterator.DONE) {
-            if (it.current()==' ')
+            if (it.current() == ' ')
                 break;
-            prevDate+=it.current();
+            prevDate += it.current();
             it.next();
         }
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate date1 = LocalDate.parse(prevDate, dtf);
         String now = dtf.format(LocalDateTime.now());
-        LocalDate date2=LocalDate.parse(now,dtf);
-        long daysInBetween= ChronoUnit.DAYS.between(date1, date2);
+        LocalDate date2 = LocalDate.parse(now, dtf);
+        long daysInBetween = ChronoUnit.DAYS.between(date1, date2);
 
         return daysInBetween;
     }
 
 
-
     private void addTableHeader(PdfPTable table) {
-        Stream.of("Date", "Account", "Amount","Balance","Type")
+        Stream.of("Date", "Account", "Amount", "Balance", "Type")
                 .forEach(columnTitle -> {
                     PdfPCell header = new PdfPCell();
                     header.setBackgroundColor(BaseColor.LIGHT_GRAY);
@@ -118,9 +118,9 @@ public class TransactionServiceImpl implements TransactionService{
                     table.addCell(header);
                 });
     }
-    private void addRows(PdfPTable table,List<Transaction> transactions,int accountNumber) {
-        for(Transaction transaction:transactions)
-        {
+
+    private void addRows(PdfPTable table, List<Transaction> transactions, int accountNumber) {
+        for (Transaction transaction : transactions) {
             table.addCell(transaction.getCreated_at());//1
             if (transaction.getFrom_id() == accountNumber) {//2
                 table.addCell(String.valueOf(transaction.getTo_id()));

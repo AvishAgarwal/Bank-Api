@@ -3,6 +3,8 @@ package com.bank.bankapi.services;
 import com.bank.bankapi.domain.Account;
 import com.bank.bankapi.domain.User;
 import com.bank.bankapi.exceptions.BAuthException;
+import com.bank.bankapi.exceptions.BBadRequestException;
+import com.bank.bankapi.exceptions.BNotFoundException;
 import com.bank.bankapi.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,12 +21,12 @@ public class UserServiceImpl implements UserServices {
     AccountService accountService;
 
     @Override
-    public User registerUser(String firstName, String lastName, String password, int employeeId, String phone) throws BAuthException {
+    public User registerUser(String firstName, String lastName, String password, int employeeId, String phone) throws BBadRequestException {
         if (phone.length() != 10)
-            throw new BAuthException("Invalid Phone Number");
+            throw new BBadRequestException("Invalid Phone Number");
         Integer count = userRepository.checkUserPhone(phone);
         if (count > 0)
-            throw new BAuthException("Phone number already present");
+            throw new BBadRequestException("Phone number already present");
         User user = new User();
         user.setFirst_name(firstName);
         user.setLast_name(lastName);
@@ -38,18 +40,18 @@ public class UserServiceImpl implements UserServices {
     }
 
     @Override
-    public boolean updateKyc(String phone, String adhaar, User.Status status) throws BAuthException {
+    public boolean updateKyc(String phone, String adhaar, User.Status status) throws BNotFoundException {
         if (phone.length() != 10)
-            throw new BAuthException("Invalid Phone Number");
+            throw new BNotFoundException("Invalid Phone Number");
 
         return userRepository.updateKyc(phone, adhaar, status);
     }
 
     @Override
-    public boolean deleteUser(int user_id) throws BAuthException {
+    public boolean deleteUser(int user_id) throws BNotFoundException {
         User user = userRepository.findUserById(user_id);
         if (user == null) {
-            throw new BAuthException("User do not exists");
+            throw new BNotFoundException("User do not exists");
         }
         boolean flag = true;
         if (user.getCurrent_account_number() != 0) {
@@ -68,21 +70,21 @@ public class UserServiceImpl implements UserServices {
 
         }
         if (!flag) {
-            throw new BAuthException("Unable to delete account");
+            throw new BNotFoundException("Unable to delete account");
         }
         return userRepository.deleteUserById(user_id);
     }
 
     @Override
-    public Integer createAccount(String id, Account.Type type, String balance) throws BAuthException {
+    public Integer createAccount(String id, Account.Type type, String balance) throws BBadRequestException {
 
         User user = userRepository.findUserById(Integer.valueOf(id));
         if (user == null) {
-            throw new BAuthException("No such id exists");
+            throw new BBadRequestException("No such id exists");
         }
 
         if (user.getKyc_status() == User.Status.REJECTED || user.getKyc_status() == User.Status.UNVERIFIED) {
-            throw new BAuthException("Please get the kyc verified");
+            throw new BBadRequestException("Please get the kyc verified");
         }
 
         Account account = new Account();
@@ -109,7 +111,7 @@ public class UserServiceImpl implements UserServices {
                 break;
         }
         if (hasAccount) {
-            throw new BAuthException("Account Already Exists");
+            throw new BBadRequestException("Account Already Exists");
         }
 
         int accountNumber = accountService.createAccount(account);
@@ -128,11 +130,11 @@ public class UserServiceImpl implements UserServices {
                 user.setCurrent_account_number(accountNumber);
                 break;
             default:
-                throw new BAuthException("Invalid Account type");
+                throw new BBadRequestException("Invalid Account type");
         }
         boolean flag = userRepository.updateAccounts(user);
         if (flag == false)
-            throw new BAuthException("Unable to create Account");
+            throw new BBadRequestException("Unable to create Account");
         return accountNumber;
     }
 }

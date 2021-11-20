@@ -24,7 +24,7 @@ public class GenerateJWTToken {
                 .claim("phone", employee.getPhone())
                 .claim("firstName", employee.getFirst_name())
                 .claim("lastName", employee.getLast_name())
-                .claim("role",employee.getRole())
+                .claim("role", employee.getRole())
                 .compact();
         Map<String, String> map = new HashMap<>();
         map.put("token", token);

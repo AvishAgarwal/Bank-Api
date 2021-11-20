@@ -2,6 +2,8 @@ package com.bank.bankapi.repositories;
 
 import com.bank.bankapi.domain.Employee;
 import com.bank.bankapi.exceptions.BAuthException;
+import com.bank.bankapi.exceptions.BBadRequestException;
+import com.bank.bankapi.exceptions.BNotFoundException;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -30,7 +32,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     JdbcTemplate jdbcTemplate;
 
     @Override
-    public Integer createEmployee(String firstName, String lastName, String password, Employee.Role role, String phone) throws BAuthException {
+    public Integer createEmployee(String firstName, String lastName, String password, Employee.Role role, String phone) throws BBadRequestException {
 
         try{
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(10));
@@ -48,30 +50,30 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
         }
         catch (Exception e)
         {
-            throw new BAuthException("Unable to create Employee, invalid data");
+            throw new BBadRequestException("Unable to create Employee, invalid data");
         }
     }
 
     @Override
-    public Employee findEmployeeByIdandPassword(String phone, String password) throws BAuthException {
+    public Employee findEmployeeByIdandPassword(String phone, String password) throws BNotFoundException {
         try{
             Employee employee = jdbcTemplate.queryForObject(GET_EMPLOYEE_BY_PHONE, userRowMapper, new Object[]{phone});
             if (employee == null) {
-                throw new BAuthException("Employee does not exist");
+                throw new BNotFoundException("Employee does not exist");
             }
 
             if (employee.getRole() == Employee.Role.ADMIN) {
                 if (!employee.getPassword().equals(password))
-                    throw new BAuthException("Incorrect phone/password");
+                    throw new BNotFoundException("Incorrect phone/password");
             } else {
                 if (!BCrypt.checkpw(password, employee.getPassword()))
-                    throw new BAuthException("Incorrect phone/password");
+                    throw new BNotFoundException("Incorrect phone/password");
             }
             return employee;
         }
         catch (EmptyResultDataAccessException e)
         {
-            throw new BAuthException("Incorrect phone/password");
+            throw new BNotFoundException("Incorrect phone/password");
         }
     }
 
@@ -81,12 +83,12 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     }
 
     @Override
-    public Employee findEmployeeById(int user_id) {
+    public Employee findEmployeeById(int user_id) throws BNotFoundException {
         return jdbcTemplate.queryForObject(GET_EMPLOYEE_BY_ID,userRowMapper,new Object[]{user_id});
     }
 
     @Override
-    public boolean deleteEmployeeByPhone(String phone) throws BAuthException {
+    public boolean deleteEmployeeByPhone(String phone) throws BBadRequestException {
         try{
             KeyHolder keyHolder= new GeneratedKeyHolder();
             jdbcTemplate.update(connections->{
@@ -99,12 +101,12 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
         }
         catch (Exception e)
         {
-            throw new BAuthException("Unable to delete Employee, invalid data");
+            throw new BBadRequestException("Unable to delete Employee, invalid data");
         }
     }
 
     @Override
-    public boolean updateEmployeeIsActive(Employee employee) {
+    public boolean updateEmployeeIsActive(Employee employee)throws BBadRequestException {
         try{
             KeyHolder keyHolder= new GeneratedKeyHolder();
             jdbcTemplate.update(connections->{
@@ -118,7 +120,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
         }
         catch (Exception e)
         {
-            throw new BAuthException("Unable to delete Employee, invalid data");
+            throw new BBadRequestException("Unable to delete Employee, invalid data");
         }
     }
 

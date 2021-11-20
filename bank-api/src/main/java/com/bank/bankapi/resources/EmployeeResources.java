@@ -116,11 +116,11 @@ public class EmployeeResources {
         boolean flag= employeeService.deleteEmployee(phone);
         if(flag) {
             map.put("message", "Employee Deleted Successfully");
-            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.OK);
         }
         else {
             map.put("message", "Unable to Delete the Employee");
-            return new ResponseEntity<>(map, HttpStatus.OK);
+            return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
 
     }

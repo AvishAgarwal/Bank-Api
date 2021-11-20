@@ -3,6 +3,8 @@ package com.bank.bankapi.services;
 import com.bank.bankapi.domain.Account;
 import com.bank.bankapi.domain.Transaction;
 import com.bank.bankapi.exceptions.BAuthException;
+import com.bank.bankapi.exceptions.BBadRequestException;
+import com.bank.bankapi.exceptions.BNotFoundException;
 import com.bank.bankapi.repositories.AccountRepository;
 import com.bank.bankapi.repositories.TransactionRepository;
 import com.itextpdf.text.BaseColor;
@@ -41,7 +43,7 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Override
-    public Integer createTransaction(Account from, Account to, double amount) throws BAuthException {
+    public Integer createTransaction(Account from, Account to, double amount) throws BBadRequestException {
         from.setCurrent_balance(from.getCurrent_balance() - amount);
         to.setCurrent_balance(to.getCurrent_balance() + amount);
 
@@ -51,13 +53,13 @@ public class TransactionServiceImpl implements TransactionService {
 
         boolean flag2 = accountRepository.updateBalance(to.getAccount_number(), to.getCurrent_balance());
         if (!flag1 && !flag2)
-            throw new BAuthException("Unable to update balance");
+            throw new BBadRequestException("Unable to update balance");
 
         return transactionId;
     }
 
     @Override
-    public boolean getTransaction(String start, String stop, int accountNumber) throws BAuthException, FileNotFoundException, DocumentException {
+    public boolean getTransaction(String start, String stop, int accountNumber) throws BNotFoundException, FileNotFoundException, DocumentException {
         List<Transaction> list = transactionRepository.getTransactions(start, stop, accountNumber);
         Document document = new Document();
         PdfWriter.getInstance(document, new FileOutputStream("transactions.pdf"));
@@ -71,7 +73,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Integer addInterest(Account from, Account to) throws BAuthException, ParseException {
+    public Integer addInterest(Account from, Account to) throws BNotFoundException, ParseException {
         long days = getDaysBetween(to.getLast_interest_added());
         long years = days / 365;
         double interest = to.getCurrent_balance() * 0.035 * years;
@@ -86,7 +88,7 @@ public class TransactionServiceImpl implements TransactionService {
         return 0;
     }
 
-    private long getDaysBetween(String date) throws ParseException {
+    private long getDaysBetween(String date) {
         CharacterIterator it
                 = new StringCharacterIterator(date);
         String prevDate = "";

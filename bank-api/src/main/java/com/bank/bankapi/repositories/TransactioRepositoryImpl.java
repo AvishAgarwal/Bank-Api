@@ -4,6 +4,7 @@ import com.bank.bankapi.domain.Account;
 import com.bank.bankapi.domain.Transaction;
 import com.bank.bankapi.exceptions.BAuthException;
 import com.bank.bankapi.exceptions.BBadRequestException;
+import com.bank.bankapi.exceptions.BNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,9 +50,16 @@ public class TransactioRepositoryImpl implements TransactionRepository {
     }
 
     @Override
-    public List<Transaction> getTransactions(String start, String stop, int accountNumber) {
+    public List<Transaction> getTransactions(String start, String stop, int accountNumber)throws BNotFoundException {
         logger.info("Running query to get transaction between {} to {}",start,stop);
-        return jdbcTemplate.query(GETTRANSACTION, userRowMapper, new Object[]{accountNumber, accountNumber, start, stop});
+        List<Transaction> list=null;
+        try
+        {
+            jdbcTemplate.query(GETTRANSACTION, userRowMapper, new Object[]{accountNumber, accountNumber, start, stop});
+        }catch (Exception e){
+            throw new BNotFoundException("Data not found between the range");
+        }
+        return list;
     }
 
     private RowMapper<Transaction> userRowMapper = ((rs, rowNum) -> {

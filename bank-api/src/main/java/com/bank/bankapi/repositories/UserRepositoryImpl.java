@@ -65,9 +65,16 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User findUserById(int user_id) {
+    public User findUserById(int user_id)throws BNotFoundException {
         logger.info("Running query to get the user by id {}",user_id);
-        return jdbcTemplate.queryForObject(GETUSERBYID, userRowMapper, new Object[]{user_id});
+        User user;
+        try
+        {
+             user = jdbcTemplate.queryForObject(GETUSERBYID, userRowMapper, new Object[]{user_id});
+        }catch (Exception e){
+            throw new BNotFoundException("User not present for id");
+        }
+        return user;
     }
 
     @Override

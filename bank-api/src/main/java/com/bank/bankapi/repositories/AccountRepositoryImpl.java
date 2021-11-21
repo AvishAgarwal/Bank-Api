@@ -3,6 +3,7 @@ package com.bank.bankapi.repositories;
 import com.bank.bankapi.domain.Account;
 import com.bank.bankapi.domain.User;
 import com.bank.bankapi.exceptions.BAuthException;
+import com.bank.bankapi.exceptions.BNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,9 +48,16 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     @Override
-    public Account getAccountByAccNo(int accountNumber) {
+    public Account getAccountByAccNo(int accountNumber)throws BNotFoundException {
         logger.info("Running qeury for getting account");
-        return jdbcTemplate.queryForObject(GETACCOUNTBYNUMBER, userRowMapper, new Object[]{accountNumber});
+        Account account;
+        try
+        {
+            account = jdbcTemplate.queryForObject(GETACCOUNTBYNUMBER, userRowMapper, new Object[]{accountNumber});
+        }catch (Exception e){
+            throw new BNotFoundException("Unable to find account with given number");
+        }
+        return account;
     }
 
     @Override

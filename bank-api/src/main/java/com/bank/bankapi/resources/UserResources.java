@@ -144,7 +144,12 @@ public class UserResources {
             return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
         String balance = (String) data.get("balance");
-
+        if(balance==null||balance.isBlank())
+        {
+            logger.error("Data not present");
+            map.put("message","Data is absent");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
         int accountNumber = userServices.createAccount(id, type, balance);
         logger.info("Account created with id {}",accountNumber);
         map.put("account_number", String.valueOf(accountNumber));

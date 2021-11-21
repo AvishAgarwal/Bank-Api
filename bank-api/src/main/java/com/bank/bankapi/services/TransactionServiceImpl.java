@@ -66,6 +66,10 @@ public class TransactionServiceImpl implements TransactionService {
     public boolean getTransaction(String start, String stop, int accountNumber) throws BNotFoundException, FileNotFoundException, DocumentException {
         logger.info("Getting transactions from {} to {} for account number {}",start,stop,accountNumber);
         List<Transaction> list = transactionRepository.getTransactions(start, stop, accountNumber);
+        if(list==null)
+        {
+            throw new BNotFoundException("Transactions not found");
+        }
         Document document = new Document();
         PdfWriter.getInstance(document, new FileOutputStream("transactions.pdf"));
         document.open();

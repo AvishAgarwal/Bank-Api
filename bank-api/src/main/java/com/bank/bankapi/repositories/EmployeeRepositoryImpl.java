@@ -90,7 +90,14 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     @Override
     public Employee findEmployeeById(int user_id) throws BNotFoundException {
         logger.info("Running query to find employee by id");
-        return jdbcTemplate.queryForObject(GET_EMPLOYEE_BY_ID,userRowMapper,new Object[]{user_id});
+        Employee employee;
+        try
+        {
+            employee = jdbcTemplate.queryForObject(GET_EMPLOYEE_BY_ID, userRowMapper, new Object[]{user_id});
+        }catch (Exception e){
+            throw new BNotFoundException("Employee with given id not present");
+        }
+        return employee;
     }
 
     @Override

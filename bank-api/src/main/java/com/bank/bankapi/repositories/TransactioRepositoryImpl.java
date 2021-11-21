@@ -55,7 +55,7 @@ public class TransactioRepositoryImpl implements TransactionRepository {
         List<Transaction> list=null;
         try
         {
-            jdbcTemplate.query(GETTRANSACTION, userRowMapper, new Object[]{accountNumber, accountNumber, start, stop});
+           list= jdbcTemplate.query(GETTRANSACTION, userRowMapper, new Object[]{accountNumber, accountNumber, start, stop});
         }catch (Exception e){
             throw new BNotFoundException("Data not found between the range");
         }

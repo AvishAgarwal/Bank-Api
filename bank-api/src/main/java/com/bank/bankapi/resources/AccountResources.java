@@ -97,7 +97,12 @@ public class AccountResources {
         int from = Integer.parseInt(fromstr);
         int to = Integer.parseInt(toStr);
         double amount = Double.parseDouble(amountstr);
-
+        if(amount==0)
+        {
+            logger.error("amount is zero");
+            map.put("message","Amount zero");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
         Account fromAcc = accountService.getAccountByAccNo(from);
         Account toAcc = accountService.getAccountByAccNo(to);
         if (fromAcc.getCurrent_balance() < amount) {
@@ -191,6 +196,11 @@ public class AccountResources {
             return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
         int id = transactionService.addInterest(fromAcc, toAcc);
+        if(id==0){
+            map.put("message","Interest not applicable");
+            logger.info("Interest not applicable");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
         logger.info("Interest added successfully");
         map.put("transaction_id", String.valueOf(id));
         return new ResponseEntity<>(map, HttpStatus.OK);

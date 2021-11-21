@@ -4,6 +4,8 @@ import com.bank.bankapi.domain.Account;
 import com.bank.bankapi.domain.Transaction;
 import com.bank.bankapi.exceptions.BAuthException;
 import com.bank.bankapi.exceptions.BBadRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -17,6 +19,7 @@ import java.util.List;
 
 @Repository
 public class TransactioRepositoryImpl implements TransactionRepository {
+    Logger logger= LoggerFactory.getLogger(TransactioRepositoryImpl.class);
     private static final String CREATETRANSACTION = "insert into bt_transactions(transaction_id,from_id,to_id,amount,from_balance,to_balance,created_at)\n" +
             "values(NEXTVAL('bt_transactions_seq'),?,?,?,?,?,now())";
     private static final String GETTRANSACTION = "select * from bt_transactions where (from_id=? or to_id=?) " +
@@ -27,7 +30,7 @@ public class TransactioRepositoryImpl implements TransactionRepository {
     @Override
     public Integer createTransaction(int from, int to, double amount, double from_balance, double to_balance) throws BBadRequestException {
         try {
-
+            logger.info("Running Query to create transaction");
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connections -> {
                 PreparedStatement preparedStatement = connections.prepareStatement(CREATETRANSACTION, Statement.RETURN_GENERATED_KEYS);
@@ -47,6 +50,7 @@ public class TransactioRepositoryImpl implements TransactionRepository {
 
     @Override
     public List<Transaction> getTransactions(String start, String stop, int accountNumber) {
+        logger.info("Running query to get transaction between {} to {}",start,stop);
         return jdbcTemplate.query(GETTRANSACTION, userRowMapper, new Object[]{accountNumber, accountNumber, start, stop});
     }
 

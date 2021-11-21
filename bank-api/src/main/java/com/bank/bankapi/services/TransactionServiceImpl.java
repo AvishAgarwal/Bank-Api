@@ -14,6 +14,8 @@ import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +38,7 @@ import java.util.stream.Stream;
 @Service
 @Transactional
 public class TransactionServiceImpl implements TransactionService {
+    Logger logger= LoggerFactory.getLogger(TransactionServiceImpl.class);
     @Autowired
     TransactionRepository transactionRepository;
     @Autowired
@@ -44,6 +47,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Integer createTransaction(Account from, Account to, double amount) throws BBadRequestException {
+        logger.info("From account {} to account {} amount {}",from,to,amount);
         from.setCurrent_balance(from.getCurrent_balance() - amount);
         to.setCurrent_balance(to.getCurrent_balance() + amount);
 
@@ -52,7 +56,7 @@ public class TransactionServiceImpl implements TransactionService {
         boolean flag1 = accountRepository.updateBalance(from.getAccount_number(), from.getCurrent_balance());
 
         boolean flag2 = accountRepository.updateBalance(to.getAccount_number(), to.getCurrent_balance());
-        if (!flag1 && !flag2)
+        if (!flag1 || !flag2)
             throw new BBadRequestException("Unable to update balance");
 
         return transactionId;
@@ -60,6 +64,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public boolean getTransaction(String start, String stop, int accountNumber) throws BNotFoundException, FileNotFoundException, DocumentException {
+        logger.info("Getting transactions from {} to {} for account number {}",start,stop,accountNumber);
         List<Transaction> list = transactionRepository.getTransactions(start, stop, accountNumber);
         Document document = new Document();
         PdfWriter.getInstance(document, new FileOutputStream("transactions.pdf"));

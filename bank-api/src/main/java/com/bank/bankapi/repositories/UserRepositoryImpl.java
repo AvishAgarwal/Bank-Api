@@ -6,6 +6,8 @@ import com.bank.bankapi.exceptions.BAuthException;
 import com.bank.bankapi.exceptions.BBadRequestException;
 import com.bank.bankapi.exceptions.BNotFoundException;
 import org.mindrot.jbcrypt.BCrypt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -18,7 +20,7 @@ import java.sql.Statement;
 
 @Repository
 public class UserRepositoryImpl implements UserRepository {
-
+    Logger logger= LoggerFactory.getLogger(UserRepositoryImpl.class);
     private static final String CREATEUSERSQL = "insert into bt_users(user_id,first_name,last_name,phone,created_by,password,current_account_number,saving_account_number,loan_account_number,salary_account_number,kyc_status,adhaar_number,is_deleted,created_at,last_updated_at) \n" +
             "values(NEXTVAL('bt_users_seq'), ?, ?, ?, ?,?,?,?,?,?,?,?,false,now(),now())";
     private static final String CHECKUSERBYPHONE = "select count(*) from bt_users where phone= ? and is_deleted=false";
@@ -32,6 +34,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Integer createUser(User user) throws BBadRequestException {
         try {
+            logger.info("Running query to create user");
             String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt(10));
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connections -> {
@@ -57,17 +60,20 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public Integer checkUserPhone(String phone) {
+        logger.info("Running query to get number of user with phone {}",phone);
         return jdbcTemplate.queryForObject(CHECKUSERBYPHONE, Integer.class, new Object[]{phone});
     }
 
     @Override
     public User findUserById(int user_id) {
+        logger.info("Running query to get the user by id {}",user_id);
         return jdbcTemplate.queryForObject(GETUSERBYID, userRowMapper, new Object[]{user_id});
     }
 
     @Override
     public boolean updateKyc(String phone, String adhaar, User.Status status) throws BNotFoundException {
         try {
+            logger.info("Running query to update kyc");
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connections -> {
                 PreparedStatement preparedStatement = connections.prepareStatement(UPDATEKYC, Statement.RETURN_GENERATED_KEYS);
@@ -86,6 +92,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public boolean updateAccounts(User user) throws BNotFoundException {
         try {
+            logger.info("Running query to update accounts");
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connections -> {
                 PreparedStatement preparedStatement = connections.prepareStatement(UPDATEACCOUNTS, Statement.RETURN_GENERATED_KEYS);
@@ -107,6 +114,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public boolean deleteUserById(int user_id) throws BBadRequestException {
         try {
+            logger.info("Running query to delete user {}", user_id);
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connections -> {
                 PreparedStatement preparedStatement = connections.prepareStatement(DELETEUSER, Statement.RETURN_GENERATED_KEYS);

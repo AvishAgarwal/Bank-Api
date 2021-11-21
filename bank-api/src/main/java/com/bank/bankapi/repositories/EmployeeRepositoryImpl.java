@@ -5,6 +5,8 @@ import com.bank.bankapi.exceptions.BAuthException;
 import com.bank.bankapi.exceptions.BBadRequestException;
 import com.bank.bankapi.exceptions.BNotFoundException;
 import org.mindrot.jbcrypt.BCrypt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,7 +20,7 @@ import java.sql.Statement;
 
 @Repository
 public class EmployeeRepositoryImpl implements EmployeeRepository{
-
+    Logger logger= LoggerFactory.getLogger(EmployeeRepositoryImpl.class);
     private static final String CREATE_SQL ="insert into bt_employees(user_id,first_name,last_name,phone,password,role,is_deleted,created_at,last_updated_at,is_active)" +
             " values(NEXTVAL('bt_employees_seq'), ?, ?, ?, ?,?,false,now(),now(),false)";
     private static final String COUNT_EMPLOYEE_WITH_PHONE = "select count(*) from bt_employees where phone= ? and is_deleted=false";
@@ -35,6 +37,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     public Integer createEmployee(String firstName, String lastName, String password, Employee.Role role, String phone) throws BBadRequestException {
 
         try{
+            logger.info("Running query to create Employee");
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(10));
             KeyHolder keyHolder= new GeneratedKeyHolder();
             jdbcTemplate.update(connections->{
@@ -57,6 +60,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     @Override
     public Employee findEmployeeByIdandPassword(String phone, String password) throws BNotFoundException {
         try{
+            logger.info("Running query to find employee by id");
             Employee employee = jdbcTemplate.queryForObject(GET_EMPLOYEE_BY_PHONE, userRowMapper, new Object[]{phone});
             if (employee == null) {
                 throw new BNotFoundException("Employee does not exist");
@@ -79,17 +83,20 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
 
     @Override
     public Integer checkEmployeePhone(String phone) {
+        logger.info("Running query to count employee with phone {}",phone);
         return jdbcTemplate.queryForObject(COUNT_EMPLOYEE_WITH_PHONE,Integer.class,new Object[]{phone});
     }
 
     @Override
     public Employee findEmployeeById(int user_id) throws BNotFoundException {
+        logger.info("Running query to find employee by id");
         return jdbcTemplate.queryForObject(GET_EMPLOYEE_BY_ID,userRowMapper,new Object[]{user_id});
     }
 
     @Override
     public boolean deleteEmployeeByPhone(String phone) throws BBadRequestException {
         try{
+            logger.info("Running query to delete with phone {}",phone);
             KeyHolder keyHolder= new GeneratedKeyHolder();
             jdbcTemplate.update(connections->{
                 PreparedStatement preparedStatement= connections.prepareStatement(DELETE_EMPLOYEE_WITH_PHONE, Statement.RETURN_GENERATED_KEYS);
@@ -108,6 +115,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
     @Override
     public boolean updateEmployeeIsActive(Employee employee)throws BBadRequestException {
         try{
+            logger.info("Running query to update active status");
             KeyHolder keyHolder= new GeneratedKeyHolder();
             jdbcTemplate.update(connections->{
                 PreparedStatement preparedStatement= connections.prepareStatement(UPDATEISACTIVE, Statement.RETURN_GENERATED_KEYS);

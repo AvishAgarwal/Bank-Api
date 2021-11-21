@@ -5,6 +5,8 @@ import com.bank.bankapi.exceptions.BAuthException;
 import com.bank.bankapi.exceptions.BBadRequestException;
 import com.bank.bankapi.exceptions.BNotFoundException;
 import com.bank.bankapi.repositories.EmployeeRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class EmployeeServiceImpl implements EmployeeService{
-
+    Logger logger= LoggerFactory.getLogger(EmployeeServiceImpl.class);
     @Autowired
     EmployeeRepository employeeRepository;
     @Override
@@ -20,6 +22,7 @@ public class EmployeeServiceImpl implements EmployeeService{
      * Checking employee updating is_active status
      */
     public Employee validateEmployee(String phone, String password, boolean status) throws BAuthException {
+        logger.info("Phone number received {}",phone);
         if(phone.length()!=10)
             throw new BAuthException("Invalid Phone Number");
         Employee employee=employeeRepository.findEmployeeByIdandPassword(phone,password);
@@ -41,6 +44,7 @@ public class EmployeeServiceImpl implements EmployeeService{
      */
     @Override
     public Employee registerEmployee( String firstName, String lastName, String password, Employee.Role role, String phone) throws BBadRequestException {
+        logger.info("Phone number received {}",phone);
         if(phone.length()!=10)
             throw new BBadRequestException("Invalid Phone Number");
         Integer count = employeeRepository.checkEmployeePhone(phone);
@@ -62,6 +66,7 @@ public class EmployeeServiceImpl implements EmployeeService{
      */
     @Override
     public boolean deleteEmployee(String phone) throws BNotFoundException {
+        logger.info("Phone number received {}",phone);
         if(phone.length()!=10)
             throw new BNotFoundException("Invalid Phone Number");
        return employeeRepository.deleteEmployeeByPhone(phone);

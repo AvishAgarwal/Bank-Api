@@ -8,6 +8,8 @@ import com.bank.bankapi.repositories.UserRepository;
 import com.bank.bankapi.services.AccountService;
 import com.bank.bankapi.services.UserServices;
 import lombok.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/user")
 public class UserResources {
-
+    Logger logger = LoggerFactory.getLogger(UserResources.class);
     @Autowired
     UserServices userServices;
     @Autowired
@@ -42,8 +44,10 @@ public class UserResources {
     public ResponseEntity<Map<String, String>> registerUser(@RequestBody Map<String, Object> data, HttpServletRequest request) {
         int userID = (Integer) request.getAttribute("userId");
         Employee employeeAuth = employeeRepository.findEmployeeById(userID);
+        Map<String, String> map = new HashMap<>();
         if (employeeAuth == null || employeeAuth.is_active() == false) {
-            Map<String, String> map = new HashMap<>();
+
+            logger.error("Employee is not authorized/logged out with id {}",userID);
             map.put("message", "You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }
@@ -51,10 +55,16 @@ public class UserResources {
         String lastName = (String) data.get("lastName");
         String phone = (String) data.get("phone");
         String password = (String) data.get("password");
+        if(firstName==null||lastName==null||phone==null||password==null||firstName.isBlank()||lastName.isBlank()||phone.isBlank()||password.isBlank())
+        {
+            logger.error("Data not present");
+            map.put("message","Data is absent");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
 
+        }
         User user = userServices.registerUser(firstName, lastName, password, userID, phone);
 
-        Map<String, String> map = new HashMap<>();
+        logger.info("User registered with id {}",user.getUser_id());
         map.put("id", String.valueOf(user.getUser_id()));
         return new ResponseEntity<>(map, HttpStatus.OK);
 
@@ -71,8 +81,10 @@ public class UserResources {
     public ResponseEntity<Map<String, String>> updateKyc(@RequestBody Map<String, Object> data, HttpServletRequest request) {
         int userID = (Integer) request.getAttribute("userId");
         Employee employeeAuth = employeeRepository.findEmployeeById(userID);
+        Map<String, String> map = new HashMap<>();
         if (employeeAuth == null || employeeAuth.is_active() == false) {
-            Map<String, String> map = new HashMap<>();
+
+            logger.error("Employee is not authorized/logged out with id {}",userID);
             map.put("message", "You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }
@@ -80,15 +92,21 @@ public class UserResources {
         String phone = (String) data.get("phone");
         String adhaar = (String) data.get("adhaar");
         String status = (String) data.get("status");
-
+        if(phone==null||adhaar==null||status==null||phone.isBlank()||adhaar.isBlank()||status.isBlank())
+        {
+            logger.error("Data not present");
+            map.put("message","Data is absent");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
         boolean flag = userServices.updateKyc(phone, adhaar, User.Status.valueOf(status));
 
-        Map<String, String> map = new HashMap<>();
         if (flag) {
             map.put("message", "KYC updated");
+            logger.info("Kyc updated");
             return new ResponseEntity<>(map, HttpStatus.OK);
         } else {
             map.put("message", "Unable to update Kyc");
+            logger.error("Unable to update kyc");
             return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
 
@@ -107,12 +125,18 @@ public class UserResources {
         Employee employeeAuth = employeeRepository.findEmployeeById(userID);
         Map<String, String> map = new HashMap<>();
         if (employeeAuth == null || employeeAuth.is_active() == false) {
-
+            logger.error("Employee is not authorized/logged out with id {}",userID);
             map.put("message", "You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }
         Account.Type type;
         String id = (String) data.get("id");
+        if(id==null||id.isBlank())
+        {
+            logger.error("Data not present");
+            map.put("message","Data is absent");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
         try {
             type = Account.Type.valueOf((String) data.get("type"));
         } catch (Exception e) {
@@ -122,6 +146,7 @@ public class UserResources {
         String balance = (String) data.get("balance");
 
         int accountNumber = userServices.createAccount(id, type, balance);
+        logger.info("Account created with id {}",accountNumber);
         map.put("account_number", String.valueOf(accountNumber));
 
         return new ResponseEntity<>(map, HttpStatus.OK);
@@ -141,7 +166,7 @@ public class UserResources {
         Employee employeeAuth = employeeRepository.findEmployeeById(userID);
         Map<String, String> map = new HashMap<>();
         if (employeeAuth == null || employeeAuth.is_active() == false) {
-
+            logger.error("Employee is not authorized/logged out with id {}",userID);
             map.put("message", "You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }
@@ -149,6 +174,7 @@ public class UserResources {
         User user = userRepository.findUserById(Integer.parseInt(id));
         if (user == null) {
             map.put("message", "User do not exist");
+            logger.error("Unable to get the user with id {}",id);
             return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
         map.put("Name", user.getFirst_name() + " " + user.getLast_name());
@@ -157,21 +183,25 @@ public class UserResources {
             Account account = accountService.getAccountByAccNo(user.getCurrent_account_number());
             map.put("Current_Account_Number", String.valueOf(user.getCurrent_account_number()));
             map.put("Current_Account_Balance", String.valueOf(account.getCurrent_balance()));
+            logger.info("Current Account added");
         }
         if (user.getSaving_account_number() != 0) {
             Account account = accountService.getAccountByAccNo(user.getSaving_account_number());
             map.put("Saving_Account_Number", String.valueOf(user.getSaving_account_number()));
             map.put("Saving_Account_Balance", String.valueOf(account.getCurrent_balance()));
+            logger.info("Saving account added");
         }
         if (user.getLoan_account_number() != 0) {
             Account account = accountService.getAccountByAccNo(user.getLoan_account_number());
             map.put("Loan_Account_Number", String.valueOf(user.getLoan_account_number()));
             map.put("Loan_Account_Balance", String.valueOf(account.getCurrent_balance()));
+            logger.info("Loan account added");
         }
         if (user.getSalary_account_number() != 0) {
             Account account = accountService.getAccountByAccNo(user.getSalary_account_number());
             map.put("Salary_Account_Number", String.valueOf(user.getSalary_account_number()));
             map.put("Salary_Account_Balance", String.valueOf(account.getCurrent_balance()));
+            logger.info("Salary account added");
         }
 
         return new ResponseEntity<>(map, HttpStatus.OK);
@@ -185,13 +215,13 @@ public class UserResources {
      * @param request employee id
      * @return success message
      */
-    @PutMapping("/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Map<String, String>> deleteUser(@PathVariable("id") String id, HttpServletRequest request) {
         int userID = (Integer) request.getAttribute("userId");
         Employee employeeAuth = employeeRepository.findEmployeeById(userID);
         Map<String, String> map = new HashMap<>();
         if (employeeAuth == null || employeeAuth.is_active() == false) {
-
+            logger.error("Employee is not authorized/logged out with id {}",userID);
             map.put("message", "You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }

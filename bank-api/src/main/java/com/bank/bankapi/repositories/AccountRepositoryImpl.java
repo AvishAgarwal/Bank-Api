@@ -3,6 +3,8 @@ package com.bank.bankapi.repositories;
 import com.bank.bankapi.domain.Account;
 import com.bank.bankapi.domain.User;
 import com.bank.bankapi.exceptions.BAuthException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -15,6 +17,7 @@ import java.sql.Statement;
 
 @Repository
 public class AccountRepositoryImpl implements AccountRepository {
+    Logger logger= LoggerFactory.getLogger(AccountRepositoryImpl.class);
     private static final String CREATEACCOUNT = "insert into bt_accounts(account_number,user_id,type,current_balance,is_deleted,created_at,last_updated_at,last_interest_added) \n" +
             "values(NEXTVAL('bt_accounts_seq'),?,?,?,false,now(),now(),now());";
     private static final String GETACCOUNTBYNUMBER = "Select * from bt_accounts where account_number=? and is_deleted=false";
@@ -27,7 +30,7 @@ public class AccountRepositoryImpl implements AccountRepository {
     @Override
     public Integer createAccount(Account account) throws BAuthException {
         try {
-
+            logger.info("Running Create account query");
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connections -> {
                 PreparedStatement preparedStatement = connections.prepareStatement(CREATEACCOUNT, Statement.RETURN_GENERATED_KEYS);
@@ -45,12 +48,14 @@ public class AccountRepositoryImpl implements AccountRepository {
 
     @Override
     public Account getAccountByAccNo(int accountNumber) {
+        logger.info("Running qeury for getting account");
         return jdbcTemplate.queryForObject(GETACCOUNTBYNUMBER, userRowMapper, new Object[]{accountNumber});
     }
 
     @Override
     public boolean deleteAccount(int account_number) throws BAuthException {
         try {
+            logger.info("Running query to delete Account");
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connections -> {
                 PreparedStatement preparedStatement = connections.prepareStatement(DELETEACCOUNT, Statement.RETURN_GENERATED_KEYS);
@@ -66,6 +71,7 @@ public class AccountRepositoryImpl implements AccountRepository {
     @Override
     public boolean updateBalance(int account_number, double balance) {
         try {
+            logger.info("Running query to update balance");
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connections -> {
                 PreparedStatement preparedStatement = connections.prepareStatement(UPDATEBALANCE, Statement.RETURN_GENERATED_KEYS);
@@ -73,7 +79,7 @@ public class AccountRepositoryImpl implements AccountRepository {
                 preparedStatement.setInt(2, account_number);
                 return preparedStatement;
             }, keyHolder);
-            //TODO
+
             return keyHolder.getKeys().size() > 0;
         } catch (Exception e) {
             throw new BAuthException("Unable to delete user, invalid data");
@@ -83,6 +89,7 @@ public class AccountRepositoryImpl implements AccountRepository {
     @Override
     public boolean updateInterest(int account_number, double balance) {
         try {
+            logger.info("Running query to update interest");
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connections -> {
                 PreparedStatement preparedStatement = connections.prepareStatement(UPDATEINTEREST, Statement.RETURN_GENERATED_KEYS);

@@ -7,6 +7,8 @@ import com.bank.bankapi.repositories.EmployeeRepository;
 import com.bank.bankapi.services.AccountService;
 import com.bank.bankapi.services.TransactionService;
 import com.itextpdf.text.DocumentException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/account")
 public class AccountResources {
+    Logger logger= LoggerFactory.getLogger(AccountResources.class);
     @Autowired
     EmployeeRepository employeeRepository;
     @Autowired
@@ -43,15 +46,18 @@ public class AccountResources {
         Map<String, String> map = new HashMap<>();
         if (employeeAuth == null || employeeAuth.is_active() == false) {
             map.put("message", "You are not authorized to do this function");
+            logger.error("Employee is not authorized/logged out with id {}",userID);
             return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }
 
         if (accountNumber == null || accountNumber.length() == 0) {
             map.put("message", "Give Account number");
+            logger.error("Account number not provided");
             return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
         Account account = accountService.getAccountByAccNo(Integer.parseInt(accountNumber));
         if (account == null) {
+            logger.error("Account not found");
             map.put("message", "unable to get account");
             return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
@@ -76,21 +82,31 @@ public class AccountResources {
         Employee employeeAuth = employeeRepository.findEmployeeById(userID);
         Map<String, String> map = new HashMap<>();
         if (employeeAuth == null || employeeAuth.is_active() == false) {
-
+            logger.error("Employee is not authorized/logged out with id {}",userID);
             map.put("message", "You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }
-        int from = Integer.parseInt((String) data.get("from"));
-        int to = Integer.parseInt((String) data.get("to"));
-        double amount = Double.parseDouble((String) data.get("amount"));
+        String fromstr=(String) data.get("from");
+        String toStr=(String) data.get("to");
+        String amountstr=(String) data.get("amount");
+        if(fromstr==null||toStr==null||amountstr==null||fromstr.isBlank()||toStr.isBlank()||amountstr.isBlank())
+        { logger.error("Data not present");
+            map.put("message","Data is absent");
+            return new ResponseEntity<>(map,HttpStatus.BAD_REQUEST);
+        }
+        int from = Integer.parseInt(fromstr);
+        int to = Integer.parseInt(toStr);
+        double amount = Double.parseDouble(amountstr);
 
         Account fromAcc = accountService.getAccountByAccNo(from);
         Account toAcc = accountService.getAccountByAccNo(to);
         if (fromAcc.getCurrent_balance() < amount) {
             map.put("message", "Insufficient Balance");
-            return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+            logger.info("Balance is Insufficient");
+            return new ResponseEntity<>(map, HttpStatus.OK);
         }
         int transId = transactionService.createTransaction(fromAcc, toAcc, amount);
+        logger.info("Transaction Successful with id {}",transId);
         map.put("transaction_id", String.valueOf(transId));
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
@@ -110,21 +126,29 @@ public class AccountResources {
         Employee employeeAuth = employeeRepository.findEmployeeById(userID);
         Map<String, String> map = new HashMap<>();
         if (employeeAuth == null || employeeAuth.is_active() == false) {
-
+            logger.error("Employee is not authorized/logged out with id {}",userID);
             map.put("message", "You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }
         String start = (String) data.get("start");
         String stop = (String) data.get("stop");
-        int accountNo = Integer.parseInt((String) data.get("account"));
+        String accountNostr=(String) data.get("account");
+        if (start == null || stop == null || accountNostr == null || start.isBlank() || stop.isBlank() || accountNostr.isBlank()) {
+            logger.error("Data not present");
+            map.put("message", "Data is absent");
+            return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+        }
+        int accountNo = Integer.parseInt(accountNostr);
 
-        Account Acc = accountService.getAccountByAccNo(accountNo);
+        Account acc = accountService.getAccountByAccNo(accountNo);
 
-        if (Acc == null) {
+        if (acc == null) {
             map.put("message", "Account do not exist");
+            logger.info("Unable to get the account");
             return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
         transactionService.getTransaction(start, stop, accountNo);
+        logger.info("Pdf created successfully");
         map.put("message", "Pdf created");
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
@@ -143,20 +167,31 @@ public class AccountResources {
         Employee employeeAuth = employeeRepository.findEmployeeById(userID);
         Map<String, String> map = new HashMap<>();
         if (employeeAuth == null || employeeAuth.is_active() == false) {
+            logger.error("Employee is not authorized/logged out with id {}",userID);
             map.put("message", "You are not authorized to do this function");
             return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
         }
-        int from = Integer.parseInt((String) data.get("from"));
-        int to = Integer.parseInt((String) data.get("to"));
+        String fromstr=(String) data.get("from");
+        String toStr=(String) data.get("to");
+        if(fromstr==null||toStr==null||fromstr.isBlank()||toStr.isBlank())
+        {
+            logger.error("Data not present");
+            map.put("message", "Data is absent");
+            return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+        }
+        int from = Integer.parseInt(fromstr);
+        int to = Integer.parseInt(toStr);
 
         Account fromAcc = accountService.getAccountByAccNo(from);
         Account toAcc = accountService.getAccountByAccNo(to);
 
         if (fromAcc == null || toAcc == null) {
             map.put("message", "Account do not exist");
+            logger.error("Unable to get the account");
             return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
         }
         int id = transactionService.addInterest(fromAcc, toAcc);
+        logger.info("Interest added successfully");
         map.put("transaction_id", String.valueOf(id));
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
